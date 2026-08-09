@@ -13,3 +13,7 @@ composer.lock
 .vscode/
 *.swp
 .DS_Store
+
+# Python bytecode from docs/extract-screenshots.py
+__pycache__/
+*.pyc
