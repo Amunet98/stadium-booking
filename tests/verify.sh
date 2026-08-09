@@ -59,6 +59,18 @@ book() { # jar match tier -> prints http status
         -o "$JAR_DIR/$1-result.html" -w '%{http_code}'
 }
 
+# Reset bookings to the seeded state first. Without this the script passes only
+# on a fresh volume: the capacity assertions below deliberately fill a tier, so
+# a second run would start with it already sold out and fail for the wrong
+# reason. A test that only passes once is not a test.
+mysql_root "
+USE booking;
+DELETE FROM bookings;
+ALTER TABLE bookings AUTO_INCREMENT = 1;
+INSERT INTO bookings (uid, mid, seat_tier, paid_amount) VALUES
+    (2, 1, 'vip', 100.00), (3, 1, 'gold', 35.00), (2, 3, 'platinum', 65.00);
+" >/dev/null 2>&1
+
 head_ "Access control (finding #1, #4)"
 expect_eq "anonymous /admin.php redirects to login" 302 "$(status "$BASE/admin.php")"
 expect_eq "anonymous /myticket.php redirects"       302 "$(status "$BASE/myticket.php")"
