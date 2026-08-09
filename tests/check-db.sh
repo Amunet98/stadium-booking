@@ -44,7 +44,10 @@ docker build -q -t "$IMAGE" . >/dev/null 2>&1 || { echo "docker build failed" >&
 
 MOUNT=()
 if [ -n "${DB_SSL_CA:-}" ] && [ -f "${DB_SSL_CA}" ]; then
-    MOUNT=(-v "$(realpath "$DB_SSL_CA")":/tmp/ca.pem:ro)
+    # ,z relabels for SELinux. Without it the container cannot read the file on
+    # Fedora/RHEL and PDO reports "Cannot connect to MySQL using SSL", which
+    # looks like a TLS negotiation failure rather than a permission problem.
+    MOUNT=(-v "$(realpath "$DB_SSL_CA")":/tmp/ca.pem:ro,z)
     CA_IN_CONTAINER=/tmp/ca.pem
 else
     CA_IN_CONTAINER=""
