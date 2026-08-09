@@ -1,5 +1,13 @@
 # Local environment — never commit real credentials
 .env
+.env.*
+# ...but the *.example templates carry no secrets and must stay tracked.
+!*.example
+
+# Provider CA certificates fetched for a local connection test
+*.pem
+*.crt
+*.key
 
 # Dependencies
 /vendor/
