@@ -1,5 +1,11 @@
 # Online Stadium Booking
 
+[![PHP](https://img.shields.io/badge/PHP-8.2-777bb4?logo=php&logoColor=white)](https://www.php.net)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479a1?logo=mysql&logoColor=white)](https://www.mysql.com)
+[![Docker](https://img.shields.io/badge/Docker-compose-2496ed?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952b3?logo=bootstrap&logoColor=white)](https://getbootstrap.com)
+[![Findings](https://img.shields.io/badge/findings-20%20documented-c0392b)](docs/SECURITY-FINDINGS.md)
+
 A stadium ticket-booking system I wrote in my third year of engineering, found
 five years later, and rebuilt — because reading it back showed the admin panel
 had no access control and the booking flow would happily oversell a stadium.
@@ -283,3 +289,7 @@ Technology, Bengaluru. Supervised by Prof. Veena Potdar.
 
 The original coursework was built on a publicly available PHP booking template.
 The restoration described here is my own work.
+
+---
+
+More of my work: **[bimeshpoudel.com.np](https://www.bimeshpoudel.com.np)**
