@@ -1,0 +1,22 @@
+# Only src/ is copied into the image; everything below would either bloat it or
+# has no business being on a public server.
+
+.git
+.gitignore
+.env
+
+# The 2021 code. Preserved in the repo for the diff, never served.
+legacy/
+
+# ~2MB of screenshots and the findings write-up.
+docs/
+
+# Test scripts run against a deployment from outside it, not from within.
+tests/
+
+# Applied by db/bootstrap.php over a connection, not baked into the image.
+db/
+
+docker-compose.yml
+Dockerfile
+README.md

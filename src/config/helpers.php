@@ -30,11 +30,37 @@ function url(string $path = ''): string
 {
     $base = rtrim(getenv('APP_BASE_URL') ?: '', '/');
     if ($base === '') {
-        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $scheme = request_is_https() ? 'https' : 'http';
         $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $base   = $scheme . '://' . $host;
     }
     return $base . '/' . ltrim($path, '/');
+}
+
+/**
+ * Is the request arriving over HTTPS?
+ *
+ * `$_SERVER['HTTPS']` alone is only true when PHP itself terminated TLS. Every
+ * hosting platform terminates TLS at a load balancer and forwards plain HTTP to
+ * the container, so on a deployed site that check reads false on an https:// page
+ * — which would make url() emit http:// links and drop the Secure flag off the
+ * session cookie.
+ *
+ * X-Forwarded-Proto carries the real scheme, but it is client-supplied and
+ * trivially spoofed, so it is honoured only when TRUST_PROXY confirms something
+ * in front of us is actually setting it.
+ */
+function request_is_https(): bool
+{
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        return true;
+    }
+    if (getenv('TRUST_PROXY') !== '1') {
+        return false;
+    }
+    // Proxies may forward a comma-separated chain; the client's hop is first.
+    $proto = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+    return strtolower(trim(explode(',', $proto)[0])) === 'https';
 }
 
 function redirect(string $path): never

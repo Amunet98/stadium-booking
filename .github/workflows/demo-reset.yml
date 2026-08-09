@@ -1,0 +1,67 @@
+name: Reset demo data
+
+# The public demo has a working admin panel and publishes its credentials, so
+# anyone can rename a stadium or delete a fixture. That is acceptable for a
+# demo as long as it does not stay broken — this puts it back every night.
+#
+# Runs only when DEMO_DB_HOST is configured, so the workflow is inert on a fork
+# or before the demo is deployed.
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # 02:00 UTC daily
+  workflow_dispatch: # and on demand, for when someone reports it looking odd
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip if the demo is not configured
+        id: check
+        run: |
+          if [ -z "${{ secrets.DEMO_DB_HOST }}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "DEMO_DB_HOST is not set — nothing to reset."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up PHP
+        if: steps.check.outputs.configured == 'true'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: pdo_mysql
+
+      - name: Reset schema and seed data
+        if: steps.check.outputs.configured == 'true'
+        env:
+          DB_HOST: ${{ secrets.DEMO_DB_HOST }}
+          DB_PORT: ${{ secrets.DEMO_DB_PORT }}
+          DB_NAME: ${{ secrets.DEMO_DB_NAME }}
+          DB_USER: ${{ secrets.DEMO_DB_USER }}
+          DB_PASSWORD: ${{ secrets.DEMO_DB_PASSWORD }}
+          DB_SSL_CA: ${{ github.workspace }}/ca.pem
+        run: |
+          # Managed MySQL requires TLS; the CA is stored as a secret rather than
+          # committed, and verification stays on.
+          printf '%s' "${{ secrets.DEMO_DB_SSL_CA }}" > "$GITHUB_WORKSPACE/ca.pem"
+          php db/bootstrap.php --force
+
+      - name: Confirm the demo answers
+        if: steps.check.outputs.configured == 'true'
+        env:
+          DEMO_URL: ${{ secrets.DEMO_URL }}
+        run: |
+          # Checked here rather than in an `if:` — the secrets context is not
+          # dependable in step conditions. A long timeout because the free tier
+          # sleeps and the first request pays the cold start.
+          if [ -z "$DEMO_URL" ]; then
+            echo "DEMO_URL not set — skipping the smoke check."
+            exit 0
+          fi
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 120 "$DEMO_URL")
+          echo "demo returned $code"
+          [ "$code" = "200" ]

@@ -29,4 +29,17 @@ RUN { \
       echo 'session.use_strict_mode=On'; \
     } > /usr/local/etc/php/conf.d/zz-app.ini
 
+# Apache is hardcoded to port 80, but hosting platforms inject the port they
+# want the container to listen on. Defaults to 80 so `docker run -p 8080:80`
+# and docker-compose keep working unchanged.
+ENV PORT=80
+RUN sed -ri 's/^Listen 80$/Listen ${PORT}/' /etc/apache2/ports.conf \
+    && sed -ri 's!<VirtualHost \*:80>!<VirtualHost *:${PORT}>!' \
+        /etc/apache2/sites-available/000-default.conf
+
+# The application itself. Without this the image builds fine and serves
+# nothing: docker-compose bind-mounts ./src over /var/www/html for development,
+# which masked the fact that the image had no code in it at all.
+COPY src/ /var/www/html/
+
 WORKDIR /var/www/html

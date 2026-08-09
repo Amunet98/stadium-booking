@@ -47,6 +47,41 @@ Verify the claims below rather than taking them on trust:
 ./tests/concurrency.sh   # 24 workers race for 4 seats
 ```
 
+<details>
+<summary><b>Deploying it somewhere real</b></summary>
+
+The image is self-contained — `docker build` copies `src/` in, and `PORT` is
+honoured if the platform injects one. Two things differ from local:
+
+**The database.** `docker compose` applies `db/schema.sql` and `db/seed.sql` by
+mounting them into the MySQL container's `/docker-entrypoint-initdb.d/`. A
+managed database has no such hook, so run this once after the first deploy:
+
+```bash
+php db/bootstrap.php          # creates schema + seed only if absent
+php db/bootstrap.php --force  # drops and recreates, for a scheduled reset
+```
+
+**The proxy.** Every host terminates TLS at a load balancer and forwards plain
+HTTP, so `$_SERVER['HTTPS']` is empty on an `https://` page. Set `TRUST_PROXY=1`
+and the app reads `X-Forwarded-Proto` instead — without it, links come out
+`http://` and the session cookie loses its `Secure` flag. It is off by default
+because that header is trivially forged by a client when nothing trustworthy
+sets it.
+
+`.env.example` documents the rest (`DB_PORT`, `DB_SSL_CA`, `APP_BASE_URL`).
+
+The database has to be **real MySQL 8**, not a MySQL-compatible service:
+`src/config/booking.php` locks with `SELECT ... FOR UPDATE OF m`, which is
+8.0.1+ syntax that Vitess- and TiDB-backed offerings do not reliably support —
+and that lock is the whole point of the project.
+
+One warning worth heeding: the admin panel is full CRUD and the credentials
+above are public. Anything you deploy publicly needs its data reset on a
+schedule — `.github/workflows/demo-reset.yml` does that nightly once its secrets
+are set, and stays inert until then.
+</details>
+
 ---
 
 ## The two bugs worth reading about

@@ -15,7 +15,10 @@ function start_session(): void
     session_set_cookie_params([
         'httponly' => true,
         'samesite' => 'Lax',
-        'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        // request_is_https() rather than $_SERVER['HTTPS'] directly: behind a
+        // TLS-terminating proxy the latter is unset, which would ship the
+        // session cookie without the Secure flag on an https:// site.
+        'secure'   => request_is_https(),
     ]);
     session_start();
 }
