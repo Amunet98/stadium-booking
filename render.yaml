@@ -23,6 +23,12 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: free
+    # Pinned rather than left to the default. Every page load makes several
+    # round trips to the database, so the service and the database want to be
+    # in the same place: Render `oregon` is AWS us-west-2, so pick AWS
+    # us-west-2 for the Aiven service too. Moving a Render service between
+    # regions means recreating it, which is why this is worth stating.
+    region: oregon
     healthCheckPath: /index.php
     envVars:
       # Render terminates TLS at its load balancer and forwards plain HTTP, so
