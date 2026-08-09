@@ -35,6 +35,9 @@ services:
     volumes:
       # Bind-mounted for development: edit src/ and reload, no rebuild.
       - ./src:/var/www/html:ro,z
+      # Test scripts run inside the container, against the same PHP and PDO
+      # the application uses. Outside the document root, so not web-reachable.
+      - ./tests:/var/www/tests:ro,z
     depends_on:
       db:
         condition: service_healthy

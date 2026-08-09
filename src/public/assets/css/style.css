@@ -42,6 +42,13 @@ body {
     vertical-align: baseline;
 }
 
+/* The nav mixes anchors, a plain text span and a form button, each with its own
+   intrinsic height. Without this the items align to the top of the flex row and
+   the signed-in name rides above the links either side of it. */
+.navbar .navbar-nav {
+    align-items: center;
+}
+
 footer {
     background-color: #fff;
 }
