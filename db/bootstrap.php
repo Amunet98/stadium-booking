@@ -16,7 +16,20 @@ declare(strict_types=1);
  * reads, so a correctly configured deploy needs no extra configuration here.
  */
 
-require_once __DIR__ . '/../src/config/db.php';
+// Two layouts to satisfy: the repo, where db/ and src/ are siblings, and the
+// image, where this lands in /var/www/db and the app in /var/www/html.
+$dbConfig = null;
+foreach ([__DIR__ . '/../src/config/db.php', '/var/www/html/config/db.php'] as $candidate) {
+    if (is_file($candidate)) {
+        $dbConfig = $candidate;
+        break;
+    }
+}
+if ($dbConfig === null) {
+    fwrite(STDERR, "bootstrap: cannot locate config/db.php\n");
+    exit(1);
+}
+require_once $dbConfig;
 
 $force = in_array('--force', $argv, true);
 

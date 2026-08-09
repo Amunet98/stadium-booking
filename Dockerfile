@@ -42,4 +42,13 @@ RUN sed -ri 's/^Listen 80$/Listen ${PORT}/' /etc/apache2/ports.conf \
 # which masked the fact that the image had no code in it at all.
 COPY src/ /var/www/html/
 
+# Schema and seed travel with the image so a deployed container can initialise
+# its own database. Outside the document root — they are read by the entrypoint,
+# never served.
+COPY db/ /var/www/db/
+
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 WORKDIR /var/www/html
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

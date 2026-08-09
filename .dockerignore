@@ -14,9 +14,10 @@ docs/
 # Test scripts run against a deployment from outside it, not from within.
 tests/
 
-# Applied by db/bootstrap.php over a connection, not baked into the image.
-db/
-
 docker-compose.yml
 Dockerfile
 README.md
+
+# db/ is deliberately NOT ignored — the entrypoint runs db/bootstrap.php to
+# initialise a managed database on first boot, so schema.sql and seed.sql have
+# to travel with the image. They land in /var/www/db, outside the docroot.

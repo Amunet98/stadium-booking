@@ -1,0 +1,55 @@
+# The database is deliberately NOT declared here, for the same reason as
+# human-anomaly-detection-backend: Render's free managed databases expire, and
+# a workspace may only hold one. Render also has no MySQL at all — only
+# Postgres — and this app needs genuine MySQL 8.
+#
+# Why MySQL 8 specifically and not a MySQL-compatible service: the booking
+# transaction in src/config/booking.php locks with
+# `SELECT ... FOR UPDATE OF m`, which is 8.0.1+ syntax that TiDB- and
+# Vitess-backed offerings do not reliably support — and that lock is the whole
+# point of the project. The schema also relies on CHECK constraints actually
+# being enforced.
+#
+# Aiven's free MySQL plan is real MySQL 8 and does not expire. Create one, then
+# set the DB_* variables below on the service.
+#
+# The container initialises its own schema on first boot (docker-entrypoint.sh
+# runs db/bootstrap.php, which is a no-op once the tables exist), so there is no
+# manual migration step after deploying.
+
+services:
+  - type: web
+    name: stadium-booking
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /index.php
+    envVars:
+      # Render terminates TLS at its load balancer and forwards plain HTTP, so
+      # without this the app emits http:// links on an https:// site and drops
+      # the Secure flag off the session cookie.
+      - key: TRUST_PROXY
+        value: "1"
+
+      # Hides the demo-credentials hint on the login page.
+      - key: APP_ENV
+        value: production
+
+      # Aiven connection details — set these in the dashboard, not here.
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+      # Path to Aiven's CA bundle inside the container. Add the certificate as
+      # a Secret File named ca.pem in the Render dashboard; Render mounts secret
+      # files at /etc/secrets/. Leave unset to connect without verifying the
+      # server certificate, which defeats the point of the TLS.
+      - key: DB_SSL_CA
+        value: /etc/secrets/ca.pem
