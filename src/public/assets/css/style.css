@@ -1,36 +1,79 @@
-/* Application styles layered on Bootstrap 5. */
+/* Application styles layered on Bootstrap 5.3.
+ *
+ * Theming is driven by data-bs-theme on <html>, which Bootstrap 5.3 reads
+ * natively. Every colour below is a token defined once per theme, so adding a
+ * theme means adding one block rather than hunting hex values.
+ */
+
+:root {
+    --app-page-bg:      #f6f7f9;
+    --app-surface:      #ffffff;
+    --app-navbar-bg:    #212529;
+    --app-border:       #e3e6ea;
+    --app-thumb-bg:     #e9ecef;
+    --app-tier-bg:      #f0f6ff;
+    --app-tier-border:  #0d6efd;
+    --app-muted-bg:     #f8f9fa;
+}
+
+[data-bs-theme="dark"] {
+    --app-page-bg:      #121417;
+    --app-surface:      #1b1f24;
+    --app-navbar-bg:    #15181c;
+    --app-border:       #2b3036;
+    --app-thumb-bg:     #23282e;
+    --app-tier-bg:      #16233a;
+    --app-tier-border:  #4d8bfd;
+    --app-muted-bg:     #1f242a;
+
+    /* Bootstrap's own surfaces, so cards, tables, inputs and dropdowns sit on
+       the same palette rather than the stock near-black. */
+    --bs-body-bg:       var(--app-page-bg);
+    --bs-border-color:  var(--app-border);
+    --bs-tertiary-bg:   var(--app-muted-bg);
+}
 
 body {
-    background-color: #f6f7f9;
+    background-color: var(--app-page-bg);
+}
+
+/* Cards and tables default to --bs-body-bg, which would make them vanish into
+   the page in dark mode. Lift them onto the surface token instead. */
+.card {
+    --bs-card-bg: var(--app-surface);
+    --bs-card-border-color: var(--app-border);
+}
+
+.list-group {
+    --bs-list-group-bg: var(--app-surface);
+    --bs-list-group-border-color: var(--app-border);
+}
+
+.table {
+    --bs-table-bg: transparent;
 }
 
 .page-hero {
     padding: 1.5rem 0 0.5rem;
-    border-bottom: 1px solid #e3e6ea;
+    border-bottom: 1px solid var(--app-border);
 }
 
-/* Fixture card thumbnails: fixed box so cards in a row line up regardless of
-   the source image's aspect ratio. */
-.match-thumb {
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-    background-color: #e9ecef;
+/* The navbar stays dark in both themes; it is the one fixed surface in the
+   layout. In dark mode it is a shade below the page so the edge still reads. */
+.navbar {
+    background-color: var(--app-navbar-bg) !important;
+    border-bottom: 1px solid transparent;
 }
 
-.tier-option {
-    padding: 0.6rem 0.75rem 0.6rem 2rem;
-    border: 1px solid #dee2e6;
-    border-radius: 0.375rem;
-    margin-bottom: 0.5rem;
+[data-bs-theme="dark"] .navbar {
+    border-bottom-color: var(--app-border);
 }
 
-.tier-option:has(input:checked) {
-    border-color: #0d6efd;
-    background-color: #f0f6ff;
-}
-
-.tier-option:has(input:disabled) {
-    background-color: #f8f9fa;
+/* The nav mixes anchors, a plain text span and form buttons, each with its own
+   intrinsic height. Without this the items align to the top of the flex row and
+   the signed-in name rides above the links either side of it. */
+.navbar .navbar-nav {
+    align-items: center;
 }
 
 /* The logout control is a form button so it can POST with a CSRF token; this
@@ -42,15 +85,50 @@ body {
     vertical-align: baseline;
 }
 
-/* The nav mixes anchors, a plain text span and a form button, each with its own
-   intrinsic height. Without this the items align to the top of the flex row and
-   the signed-in name rides above the links either side of it. */
-.navbar .navbar-nav {
+/* Theme toggle: show whichever icon represents the theme you would switch to. */
+.theme-toggle {
+    display: inline-flex;
     align-items: center;
+    opacity: 0.85;
+}
+
+.theme-toggle:hover {
+    opacity: 1;
+}
+
+.theme-toggle .icon-moon { display: none; }
+.theme-toggle .icon-sun  { display: inline-block; }
+
+[data-bs-theme="dark"] .theme-toggle .icon-moon { display: inline-block; }
+[data-bs-theme="dark"] .theme-toggle .icon-sun  { display: none; }
+
+/* Fixture card thumbnails: fixed box so cards in a row line up regardless of
+   the source image's aspect ratio. */
+.match-thumb {
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    background-color: var(--app-thumb-bg);
+}
+
+.tier-option {
+    padding: 0.6rem 0.75rem 0.6rem 2rem;
+    border: 1px solid var(--app-border);
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+}
+
+.tier-option:has(input:checked) {
+    border-color: var(--app-tier-border);
+    background-color: var(--app-tier-bg);
+}
+
+.tier-option:has(input:disabled) {
+    background-color: var(--app-muted-bg);
 }
 
 footer {
-    background-color: #fff;
+    background-color: var(--app-surface);
+    border-color: var(--app-border) !important;
 }
 
 /* Admin tables carry more columns than a phone can show; the .table-responsive

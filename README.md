@@ -4,7 +4,10 @@ A stadium ticket-booking system I wrote in my third year of engineering, found
 five years later, and rebuilt — because reading it back showed the admin panel
 had no access control and the booking flow would happily oversell a stadium.
 
-![Fixtures listing](docs/screenshots/after-01-fixtures.jpg)
+<p align="center">
+  <img src="docs/screenshots/after-01-fixtures.jpg" width="49%" alt="Fixtures listing, light theme">
+  <img src="docs/screenshots/after-07-fixtures-dark.jpg" width="49%" alt="Fixtures listing, dark theme">
+</p>
 
 The 2021 code is preserved unmodified in [`legacy/`](legacy), so the whole thing
 reads as a diff. What changed and why is in
@@ -219,7 +222,20 @@ is never updated, `ON UPDATE CASCADE` bought nothing there, so the FKs became
 | Credentials | `root`/empty, in the document root | environment, outside the docroot |
 | Errors | SQL echoed to the page | logged, not displayed |
 | Fixtures | no date column | `match_date` + `kickoff_time`, indexed |
+| Theming | none | light/dark, follows the OS, remembers your choice |
 | Runs on | Windows + XAMPP only | anywhere with Docker |
+
+### Theming
+
+Light and dark, driven by Bootstrap 5.3's native `data-bs-theme`. It follows
+`prefers-color-scheme` until you touch the toggle, after which your choice is
+remembered.
+
+The theme is applied by a small inline script in `<head>`, before any stylesheet
+loads — otherwise the page paints in the default theme and then corrects itself,
+which is a visible flash on every navigation. Colours are declared once per theme
+as tokens in `style.css`, so a third theme would be one block rather than a hunt
+through hex values.
 
 <p align="center">
   <img src="docs/screenshots/after-03-booking.jpg" width="49%" alt="Booking page with per-tier availability">
