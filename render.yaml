@@ -24,10 +24,11 @@ services:
     dockerfilePath: ./Dockerfile
     plan: free
     # Pinned rather than left to the default. Every page load makes several
-    # round trips to the database, so the service and the database want to be
-    # in the same place: Render `oregon` is AWS us-west-2, so pick AWS
-    # us-west-2 for the Aiven service too. Moving a Render service between
-    # regions means recreating it, which is why this is worth stating.
+    # round trips to the database, so the two want to be close: the demo
+    # database is Aiven's free MySQL in DigitalOcean San Francisco, and
+    # `oregon` is the nearest region Render offers (its US options are Oregon,
+    # Ohio and Virginia — there is no California). Same coast, ~20ms.
+    # Moving a Render service between regions means recreating it.
     region: oregon
     healthCheckPath: /index.php
     envVars:
