@@ -1,0 +1,15 @@
+# Local environment — never commit real credentials
+.env
+
+# Dependencies
+/vendor/
+composer.lock
+
+# PHP / editor noise
+*.log
+.php-cs-fixer.cache
+.phpunit.result.cache
+.idea/
+.vscode/
+*.swp
+.DS_Store

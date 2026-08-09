@@ -1,0 +1,38 @@
+.sidebar_wrapper {
+    background: #333;
+    color: #fff;
+    height: 100vh;
+}
+
+.sidebar_wrapper h2 {
+    text-align: center;
+    padding-top: 25px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #464646;
+}
+
+ul.menu_items {
+    list-style: none;
+    padding-left: 0;
+}
+
+ul.menu_items {
+    list-style: none;
+    font-size: 24px;
+    font-weight: 400;
+}
+
+ul.menu_items li {
+    border-bottom: 1px solid #fff;
+    padding-top: 20px;
+    padding-left: 15px;
+}
+
+ul.menu_items li a {
+    color: #fff;
+}
+
+
+.dashboard_wrapper {
+    padding: 50px 25px;
+}

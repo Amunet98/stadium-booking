@@ -1,0 +1,58 @@
+/* Common */
+.container-fluid {
+    padding: 0 60px;
+}
+
+section#footer_bar{
+    background: #333;
+    color: #f5f5f5;
+    padding: 15px;
+    font-size: 16px;
+}
+.footer_text{
+    text-align: center;
+}
+
+/* Frontpage Banner */
+
+section#banner{
+    background: url('../img/emirates.jpg');
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.baner-info {
+    padding-top: 11em;
+    padding-bottom: 11em;
+    margin: 0 auto;
+    text-align: center;
+}
+.baner-info h3 {
+    text-align: center;
+    font-size: 3.5em;
+    color: #fff;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+.baner-info h3 span {
+    color: #02a388;
+}
+
+
+/* Upcomming Games */
+#upcomming_games{
+    padding-top: 50px;
+    padding-bottom: 50px;
+    background: #f5f5f5;
+}
+
+.btn_up_details {
+    margin-top: 15px;
+    width: 100%;
+    background: #02a388;
+    padding: 10px;
+    font-size: 24px;
+}
