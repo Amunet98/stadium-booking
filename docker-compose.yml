@@ -1,0 +1,43 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpw}
+      MYSQL_DATABASE: ${DB_NAME:-booking}
+      MYSQL_USER: ${DB_USER:-booking}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-bookingpw}
+    # schema.sql then seed.sql, applied in filename order on first boot only.
+    # The ,z suffix relabels bind mounts for SELinux. Required on Fedora/RHEL,
+    # harmless elsewhere; without it the container cannot read these files.
+    volumes:
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro,z
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro,z
+      - db_data:/var/lib/mysql
+    healthcheck:
+      # The app container must not start until MySQL is actually accepting
+      # connections; the port opens well before the init scripts finish.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpw}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  web:
+    build: .
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME:-booking}
+      DB_USER: ${DB_USER:-booking}
+      DB_PASSWORD: ${DB_PASSWORD:-bookingpw}
+      APP_ENV: ${APP_ENV:-development}
+    volumes:
+      # Bind-mounted for development: edit src/ and reload, no rebuild.
+      - ./src:/var/www/html:ro,z
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Stadium">
+  <rect width="640" height="360" fill="#1f2d3d"/>
+  <ellipse cx="320" cy="250" rx="290" ry="120" fill="#2f7d4f"/>
+  <ellipse cx="320" cy="250" rx="230" ry="92" fill="none" stroke="#e9f5ee" stroke-width="3" opacity="0.7"/>
+  <line x1="320" y1="158" x2="320" y2="342" stroke="#e9f5ee" stroke-width="3" opacity="0.7"/>
+  <circle cx="320" cy="250" r="34" fill="none" stroke="#e9f5ee" stroke-width="3" opacity="0.7"/>
+  <rect x="30" y="60" width="580" height="70" rx="10" fill="#33475e"/>
+  <g fill="#4a6382">
+    <rect x="46"  y="76" width="40" height="16" rx="4"/>
+    <rect x="96"  y="76" width="40" height="16" rx="4"/>
+    <rect x="146" y="76" width="40" height="16" rx="4"/>
+    <rect x="196" y="76" width="40" height="16" rx="4"/>
+    <rect x="246" y="76" width="40" height="16" rx="4"/>
+    <rect x="296" y="76" width="40" height="16" rx="4"/>
+    <rect x="346" y="76" width="40" height="16" rx="4"/>
+    <rect x="396" y="76" width="40" height="16" rx="4"/>
+    <rect x="446" y="76" width="40" height="16" rx="4"/>
+    <rect x="496" y="76" width="40" height="16" rx="4"/>
+    <rect x="546" y="76" width="40" height="16" rx="4"/>
+    <rect x="46"  y="102" width="40" height="16" rx="4"/>
+    <rect x="96"  y="102" width="40" height="16" rx="4"/>
+    <rect x="146" y="102" width="40" height="16" rx="4"/>
+    <rect x="196" y="102" width="40" height="16" rx="4"/>
+    <rect x="246" y="102" width="40" height="16" rx="4"/>
+    <rect x="296" y="102" width="40" height="16" rx="4"/>
+    <rect x="346" y="102" width="40" height="16" rx="4"/>
+    <rect x="396" y="102" width="40" height="16" rx="4"/>
+    <rect x="446" y="102" width="40" height="16" rx="4"/>
+    <rect x="496" y="102" width="40" height="16" rx="4"/>
+    <rect x="546" y="102" width="40" height="16" rx="4"/>
+  </g>
+</svg>

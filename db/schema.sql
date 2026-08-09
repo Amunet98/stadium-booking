@@ -122,12 +122,17 @@ CREATE TABLE matches (
     CONSTRAINT fk_matches_venue                                   -- [NEW]
         FOREIGN KEY (venue) REFERENCES stadium (sid)
         ON UPDATE CASCADE ON DELETE RESTRICT,
+    -- ON UPDATE RESTRICT rather than CASCADE, deliberately: MySQL refuses to
+    -- let a column participate in both a CHECK constraint and a foreign key
+    -- carrying a referential action (ERROR 3823). Since tid is a surrogate
+    -- AUTO_INCREMENT key that is never updated, CASCADE bought nothing, and
+    -- chk_matches_distinct_teams below is worth more.
     CONSTRAINT fk_matches_hometeam                                -- [NEW]
         FOREIGN KEY (hometeam) REFERENCES teams (tid)
-        ON UPDATE CASCADE ON DELETE RESTRICT,
+        ON UPDATE RESTRICT ON DELETE RESTRICT,
     CONSTRAINT fk_matches_awayteam                                -- [NEW]
         FOREIGN KEY (awayteam) REFERENCES teams (tid)
-        ON UPDATE CASCADE ON DELETE RESTRICT,
+        ON UPDATE RESTRICT ON DELETE RESTRICT,
     CONSTRAINT chk_matches_distinct_teams                         -- [NEW]
         CHECK (hometeam <> awayteam),
     CONSTRAINT chk_matches_prices_non_negative                    -- [NEW]
