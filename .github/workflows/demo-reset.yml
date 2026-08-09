@@ -7,6 +7,11 @@ name: Reset demo data
 # Runs only when DEMO_DB_HOST is configured, so the workflow is inert on a fork
 # or before the demo is deployed.
 
+# Deliberately once a day, not more. Waking the service costs Render instance
+# hours from a 750/month pool shared across every free service in the workspace,
+# and a service stays up 15 minutes after its last request. Nightly is ~7.5
+# h/month; a 10-minute keep-alive would eat the whole budget and suspend the
+# other free services with it.
 on:
   schedule:
     - cron: "0 2 * * *" # 02:00 UTC daily
