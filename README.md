@@ -1,5 +1,6 @@
 # Online Stadium Booking
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-onrender.com-facc15)](https://stadium-booking-75sm.onrender.com)
 [![PHP](https://img.shields.io/badge/PHP-8.2-777bb4?logo=php&logoColor=white)](https://www.php.net)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479a1?logo=mysql&logoColor=white)](https://www.mysql.com)
 [![Docker](https://img.shields.io/badge/Docker-compose-2496ed?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
@@ -22,7 +23,20 @@ with the original code, the failure it caused, and the fix.
 
 ---
 
-## Run it
+## Try it
+
+**[stadium-booking-75sm.onrender.com](https://stadium-booking-75sm.onrender.com)** —
+free tier, so the first request after a quiet spell takes ~50 seconds to wake.
+
+| Role  | Email               | Password      |
+|-------|---------------------|---------------|
+| Admin | `admin@example.com` | `Admin!2345`  |
+| User  | `alex@example.com`  | `Passw0rd!23` |
+
+The admin login is real and unrestricted, so the demo data gets rearranged from
+time to time. It resets to seed every night.
+
+## Run it locally
 
 Docker is the only requirement.
 
@@ -32,13 +46,8 @@ cp .env.example .env
 docker compose up -d
 ```
 
-Then open <http://localhost:8080>. The schema and demo data apply themselves on
-first boot.
-
-| Role  | Email               | Password      |
-|-------|---------------------|---------------|
-| Admin | `admin@example.com` | `Admin!2345`  |
-| User  | `alex@example.com`  | `Passw0rd!23` |
+Then open <http://localhost:8080>, with the same logins as above. The schema and
+demo data apply themselves on first boot.
 
 Verify the claims below rather than taking them on trust:
 
