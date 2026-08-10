@@ -42,7 +42,25 @@ function db(): PDO
     // DB_SSL_CA points at a CA bundle on disk; with it set the server
     // certificate is verified, which is the part that makes encryption
     // worth having.
+    //
+    // If the path is set but unreadable, PDO raises "failed loading cafile
+    // stream", which reads as a TLS fault when it is really a file permission
+    // one. Fail with a message that says which.
+    //
+    // Deliberately fatal rather than falling back. Measured against Aiven:
+    // dropping MYSQL_ATTR_SSL_CA does not downgrade to unverified TLS, it
+    // downgrades to *no* TLS — `SHOW STATUS LIKE 'Ssl_cipher'` comes back
+    // empty, and MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false does not change
+    // that. A "graceful" fallback here would put the database password on the
+    // public internet in cleartext on every connection. Better to be down.
     if ($ca = getenv('DB_SSL_CA')) {
+        if (!is_readable($ca)) {
+            throw new RuntimeException(
+                "DB_SSL_CA={$ca} is not readable by " . (get_current_user() ?: 'this process')
+                . '. Refusing to connect: without the CA this driver falls back to an'
+                . ' unencrypted connection rather than unverified TLS.'
+            );
+        }
         $options[PDO::MYSQL_ATTR_SSL_CA] = $ca;
     }
 
