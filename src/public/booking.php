@@ -175,8 +175,11 @@ require __DIR__ . '/../views/header.php';
                                     <span>
                                         <span class="tier-name"><?= e(tier_label($tier)) ?></span>
                                         <span class="tier-price d-block">&pound;<?= e(money($match['price_' . $tier])) ?></span>
+                                        <?php /* Not "released for this fixture": the whole page is
+                                                 one fixture, and on a 375px screen those three extra
+                                                 words wrapped the line into four. */ ?>
                                         <span class="small text-muted d-block">
-                                            <?= number_format($capacity) ?> released for this fixture
+                                            <?= number_format($capacity) ?> released
                                         </span>
                                     </span>
                                     <span class="<?= $soldOut ? 'text-danger' : 'text-success' ?>">

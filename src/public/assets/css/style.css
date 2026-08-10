@@ -1235,6 +1235,32 @@ p, li { line-height: 1.6; }
         text-align: left;
     }
     .ticket-stub::before, .ticket-stub::after { display: none; }
+
+    /* Below the perforation the stub has a full row to itself, so the
+       reference, tier and price read across it rather than stacking into
+       three lines of mostly empty space. The children keep their .d-block
+       from the markup; as flex items that no longer forces a line each. */
+    .ticket-stub > div {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: .25rem .75rem;
+        width: 100%;
+    }
+
+    .ticket-stub .ticket-tier,
+    .ticket-stub .ticket-paid { margin-top: 0; }
+}
+
+/* The tier chooser puts the price block and the availability pill on one row.
+   At 375px that leaves the text column about 9 characters wide, which wrapped
+   "2 released" onto three lines. Stack them instead. */
+@media (max-width: 575.98px) {
+    .tier-option label {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: .5rem !important;
+    }
 }
 
 /* Admin tables carry more columns than a phone can show; the .table-responsive
