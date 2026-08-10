@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Aston Villa">
+  <defs>
+    <clipPath id="s"><path d="M32 3.5 L57 11.5 V31 C57 45.5 46.2 55.6 32 60.5 C17.8 55.6 7 45.5 7 31 V11.5 Z"/></clipPath>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".18"/>
+      <stop offset=".55" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#s)">
+    <rect width="64" height="64" fill="#670E36"/>
+    <rect x="12" y="0" width="12" height="64" fill="#95BFE5"/>
+    <rect x="0" y="23" width="64" height="20" fill="#2e1022"/>
+    <rect x="0" y="23" width="64" height="1.5" fill="#955672"/>
+    <rect x="0" y="41" width="64" height="2" fill="#95BFE5"/>
+    <rect width="64" height="64" fill="url(#g)"/>
+  </g>
+  <path d="M32 3.5 L57 11.5 V31 C57 45.5 46.2 55.6 32 60.5 C17.8 55.6 7 45.5 7 31 V11.5 Z" fill="none" stroke="#ab7a90" stroke-width="2.5"/>
+  <text x="32" y="38" text-anchor="middle" font-family="system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif" font-size="15"
+        font-weight="700" letter-spacing=".5" fill="#FFFFFF">AVL</text>
+</svg>

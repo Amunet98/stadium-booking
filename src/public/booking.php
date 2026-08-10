@@ -13,8 +13,10 @@ $matchId = (int) ($_GET['match'] ?? $_POST['mid'] ?? 0);
 $error   = null;
 
 $stmt = $pdo->prepare(
-    'SELECT m.*, s.name AS venue_name,
-            home.name AS home_team, away.name AS away_team
+    'SELECT m.*, s.name AS venue_name, s.photo AS venue_photo, s.description AS venue_description,
+            s.capacity_vip, s.capacity_platinum, s.capacity_gold,
+            home.name AS home_team, home.photo AS home_photo, home.manager AS home_manager,
+            away.name AS away_team, away.photo AS away_photo, away.manager AS away_manager
        FROM matches m
        JOIN stadium s   ON s.sid = m.venue
        JOIN teams  home ON home.tid = m.hometeam
@@ -28,8 +30,21 @@ if (!$match) {
     http_response_code(404);
     $pageTitle = 'Match not found';
     require __DIR__ . '/../views/header.php';
-    echo '<div class="alert alert-warning">That match does not exist.</div>';
-    echo '<a class="btn btn-primary" href="' . url('index.php') . '">Back to fixtures</a>';
+    ?>
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="empty-state">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>
+                </svg>
+                <h1 class="h4 mb-2">That fixture does not exist</h1>
+                <p>It may have been removed from the schedule since you last looked.</p>
+                <a class="btn btn-primary" href="<?= url('fixtures.php') ?>">Back to fixtures</a>
+            </div>
+        </div>
+    </div>
+    <?php
     require __DIR__ . '/../views/footer.php';
     exit;
 }
@@ -48,58 +63,121 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $remaining = seats_remaining_all($pdo, $matchId);
-$pageTitle = $match['title'];
+$kickoff   = new DateTimeImmutable($match['match_date'] . ' ' . $match['kickoff_time']);
+
+$pageTitle  = $match['title'];
+$navCurrent = 'fixtures';
 require __DIR__ . '/../views/header.php';
 ?>
 
-<div class="row justify-content-center">
-    <div class="col-lg-8">
+<nav aria-label="Breadcrumb" class="mb-3">
+    <ol class="breadcrumb small mb-0">
+        <li class="breadcrumb-item"><a href="<?= url('index.php') ?>">Home</a></li>
+        <li class="breadcrumb-item"><a href="<?= url('fixtures.php') ?>">Fixtures</a></li>
+        <li class="breadcrumb-item active" aria-current="page"><?= e($match['title']) ?></li>
+    </ol>
+</nav>
+
+<div class="row g-4">
+    <!-- ------------------------------------------------------- the fixture -->
+    <div class="col-lg-5">
+        <div class="card overflow-hidden">
+            <?php
+            $m = $match;
+            $m['home_photo'] = $match['home_photo'];
+            require __DIR__ . '/../views/partials/fixture-art.php';
+            ?>
+            <div class="card-body">
+                <h1 class="h5 mb-3"><?= e($match['title']) ?></h1>
+
+                <dl class="row small mb-0">
+                    <dt class="col-4 text-muted fw-normal">Kick-off</dt>
+                    <dd class="col-8">
+                        <time datetime="<?= e($kickoff->format(DateTimeInterface::ATOM)) ?>">
+                            <?= e($kickoff->format('l j F Y')) ?><br><?= e($kickoff->format('H:i')) ?>
+                        </time>
+                    </dd>
+
+                    <dt class="col-4 text-muted fw-normal">Ground</dt>
+                    <dd class="col-8"><?= e($match['venue_name']) ?></dd>
+
+                    <dt class="col-4 text-muted fw-normal">Home</dt>
+                    <dd class="col-8">
+                        <?= e($match['home_team']) ?>
+                        <?php if ($match['home_manager']): ?>
+                            <span class="text-muted d-block"><?= e($match['home_manager']) ?></span>
+                        <?php endif; ?>
+                    </dd>
+
+                    <dt class="col-4 text-muted fw-normal">Away</dt>
+                    <dd class="col-8">
+                        <?= e($match['away_team']) ?>
+                        <?php if ($match['away_manager']): ?>
+                            <span class="text-muted d-block"><?= e($match['away_manager']) ?></span>
+                        <?php endif; ?>
+                    </dd>
+
+                    <?php if ($match['ptw']): ?>
+                        <dt class="col-4 text-muted fw-normal">Watch for</dt>
+                        <dd class="col-8 mb-0"><?= e($match['ptw']) ?></dd>
+                    <?php endif; ?>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------------------------------------------------------- the form -->
+    <div class="col-lg-7">
         <div class="card">
             <div class="card-header">
-                <h1 class="h5 mb-0"><?= e($match['title']) ?></h1>
+                <h2 class="h6 mb-0">Choose a seat</h2>
             </div>
             <div class="card-body">
 
-                <dl class="row small mb-4">
-                    <dt class="col-sm-3">Kick-off</dt>
-                    <dd class="col-sm-9">
-                        <?= e(date('l j F Y', strtotime($match['match_date']))) ?>
-                        at <?= e(date('H:i', strtotime($match['kickoff_time']))) ?>
-                    </dd>
-                    <dt class="col-sm-3">Venue</dt>
-                    <dd class="col-sm-9"><?= e($match['venue_name']) ?></dd>
-                    <dt class="col-sm-3">Teams</dt>
-                    <dd class="col-sm-9"><?= e($match['home_team']) ?> vs <?= e($match['away_team']) ?></dd>
-                    <?php if ($match['ptw']): ?>
-                        <dt class="col-sm-3">Players to watch</dt>
-                        <dd class="col-sm-9"><?= e($match['ptw']) ?></dd>
-                    <?php endif; ?>
-                </dl>
-
                 <?php if ($error): ?>
-                    <div class="alert alert-danger"><?= e($error) ?></div>
+                    <div class="alert alert-danger" role="alert">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/>
+                        </svg>
+                        <span><?= e($error) ?></span>
+                    </div>
                 <?php endif; ?>
 
                 <form method="post" action="<?= url('booking.php') ?>">
                     <?= csrf_field() ?>
                     <input type="hidden" name="mid" value="<?= (int) $matchId ?>">
 
-                    <fieldset class="mb-3">
-                        <legend class="h6">Choose a seat</legend>
+                    <fieldset class="mb-4">
+                        <legend class="visually-hidden">Seat tier</legend>
+                        <?php /*
+                            The availability span below keeps Bootstrap's
+                            .text-success / .text-danger class names, and the
+                            wording "N remaining" / "Sold out", on purpose:
+                            tests/verify.sh scrapes exactly this to read what
+                            the page reports before and after a booking. It is
+                            styled as a pill in style.css rather than renamed —
+                            a test that reads the real page is worth more than
+                            a tidier class attribute.
+                        */ ?>
                         <?php foreach (SEAT_TIERS as $tier):
-                            $left    = $remaining[$tier];
-                            $soldOut = $left === 0;
+                            $left     = $remaining[$tier];
+                            $soldOut  = $left === 0;
+                            $capacity = (int) $match['capacity_' . $tier];
                         ?>
                             <div class="form-check tier-option <?= $soldOut ? 'text-muted' : '' ?>">
                                 <input class="form-check-input" type="radio" name="seat_tier"
                                        id="tier-<?= e($tier) ?>" value="<?= e($tier) ?>"
                                        <?= $soldOut ? 'disabled' : '' ?>
                                        <?= (($_POST['seat_tier'] ?? '') === $tier) ? 'checked' : '' ?> required>
-                                <label class="form-check-label d-flex justify-content-between"
+                                <label class="form-check-label d-flex justify-content-between align-items-center gap-3"
                                        for="tier-<?= e($tier) ?>">
                                     <span>
-                                        <strong><?= e(tier_label($tier)) ?></strong>
-                                        — &pound;<?= e(money($match['price_' . $tier])) ?>
+                                        <span class="tier-name"><?= e(tier_label($tier)) ?></span>
+                                        <span class="tier-price d-block">&pound;<?= e(money($match['price_' . $tier])) ?></span>
+                                        <span class="small text-muted d-block">
+                                            <?= number_format($capacity) ?> released for this fixture
+                                        </span>
                                     </span>
                                     <span class="<?= $soldOut ? 'text-danger' : 'text-success' ?>">
                                         <?= $soldOut ? 'Sold out' : e((string) $left) . ' remaining' ?>
@@ -111,13 +189,17 @@ require __DIR__ . '/../views/header.php';
 
                     <p class="small text-muted">
                         Booking as <strong><?= e($viewer['name'] ?: $viewer['email']) ?></strong>.
+                        One ticket per tier, per fixture, per account.
+                        No payment is taken — this demo records what a ticket cost, nothing more.
                     </p>
 
-                    <button class="btn btn-primary" type="submit"
-                            <?= array_sum($remaining) === 0 ? 'disabled' : '' ?>>
-                        Confirm booking
-                    </button>
-                    <a class="btn btn-link" href="<?= url('index.php') ?>">Cancel</a>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary" type="submit"
+                                <?= array_sum($remaining) === 0 ? 'disabled' : '' ?>>
+                            Confirm booking
+                        </button>
+                        <a class="btn btn-ghost" href="<?= url('fixtures.php') ?>">Cancel</a>
+                    </div>
                 </form>
             </div>
         </div>

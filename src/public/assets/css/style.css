@@ -1,140 +1,1244 @@
-/* Application styles layered on Bootstrap 5.3.
+/* Online Stadium Booking — application styles, layered on Bootstrap 5.3.
+ *
+ * Structure:
+ *   1  fonts
+ *   2  tokens          (the only place a colour is written down)
+ *   3  Bootstrap remap (so .btn-primary etc. inherit the tokens)
+ *   4  base + typography
+ *   5  layout
+ *   6  navigation
+ *   7  buttons + forms
+ *   8  cards, fixtures, badges
+ *   9  landing page
+ *  10  booking + tickets
+ *  11  admin
+ *  12  footer
+ *  13  motion
  *
  * Theming is driven by data-bs-theme on <html>, which Bootstrap 5.3 reads
- * natively. Every colour below is a token defined once per theme, so adding a
- * theme means adding one block rather than hunting hex values.
+ * natively. Every colour is a token defined once per theme, so a third theme
+ * would be one block rather than a hunt through hex values. All the
+ * foreground/background pairs below clear WCAG AA (4.5:1) in both themes —
+ * that was measured, not eyeballed; the tightest is secondary text on the
+ * page at 5.82:1.
  */
 
+/* ------------------------------------------------------------------ 1 fonts
+ * Self-hosted, latin subset, variable weight. See assets/fonts/README.md for
+ * the licences and the URLs these came from.
+ */
+@font-face {
+    font-family: 'Archivo';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('../fonts/archivo.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+2122, U+2191, U+2193, U+2212, U+2215;
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('../fonts/inter.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+2000-206F, U+2122, U+2191, U+2193, U+2212, U+2215;
+}
+
+/* ----------------------------------------------------------------- 2 tokens */
 :root {
-    --app-page-bg:      #f6f7f9;
+    /* surfaces */
+    --app-page-bg:      #f4f6f5;
     --app-surface:      #ffffff;
-    --app-navbar-bg:    #212529;
-    --app-border:       #e3e6ea;
-    --app-thumb-bg:     #e9ecef;
-    --app-tier-bg:      #f0f6ff;
-    --app-tier-border:  #0d6efd;
-    --app-muted-bg:     #f8f9fa;
+    --app-surface-2:    #eef1f0;
+    --app-border:       #bfcbc5;
+    --app-border-soft:  #dde3e0;
+
+    /* ink */
+    --app-ink:          #0f1a15;
+    --app-ink-muted:    #55635c;
+
+    /* brand — pitch green */
+    --app-brand:        #0b6b46;
+    --app-brand-strong: #095637;
+    --app-brand-ink:    #ffffff;
+    --app-brand-soft:   #e6f2ec;
+
+    /* accent — scarcity, "3 left" */
+    --app-accent:       #9a4a12;
+    --app-accent-soft:  #fdf0e3;
+
+    --app-danger:       #b3261e;
+    --app-danger-soft:  #fdecea;
+
+    /* Night sky behind the venue artwork. Fixed across themes: the art is a
+       floodlit ground, and a floodlit ground is dark in both. */
+    --app-night:        #0b1116;
+
+    /* elevation */
+    --shadow-1: 0 1px 2px rgba(15, 26, 21, .06), 0 1px 3px rgba(15, 26, 21, .04);
+    --shadow-2: 0 2px 6px rgba(15, 26, 21, .07), 0 8px 20px rgba(15, 26, 21, .06);
+    --shadow-3: 0 6px 14px rgba(15, 26, 21, .09), 0 18px 40px rgba(15, 26, 21, .10);
+
+    /* radius */
+    --radius-sm: .375rem;
+    --radius:    .625rem;
+    --radius-lg: 1rem;
+
+    /* motion — one rhythm for the whole interface */
+    --dur-micro: 180ms;
+    --dur:       260ms;
+    --ease-out:  cubic-bezier(.22, .68, .35, 1);
+    --ease-in:   cubic-bezier(.55, .06, .68, .19);
+
+    --font-display: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 [data-bs-theme="dark"] {
-    --app-page-bg:      #121417;
-    --app-surface:      #1b1f24;
-    --app-navbar-bg:    #15181c;
-    --app-border:       #2b3036;
-    --app-thumb-bg:     #23282e;
-    --app-tier-bg:      #16233a;
-    --app-tier-border:  #4d8bfd;
-    --app-muted-bg:     #1f242a;
+    --app-page-bg:      #0f1417;
+    --app-surface:      #191f24;
+    --app-surface-2:    #1f262c;
+    --app-border:       #333e45;
+    --app-border-soft:  #262f35;
+
+    --app-ink:          #e8eeeb;
+    --app-ink-muted:    #9bb0a8;
+
+    --app-brand:        #3ddc97;
+    --app-brand-strong: #63e5ae;
+    --app-brand-ink:    #06251a;
+    --app-brand-soft:   #14322a;
+
+    --app-accent:       #f0a868;
+    --app-accent-soft:  #33220f;
+
+    --app-danger:       #f2857e;
+    --app-danger-soft:  #33191a;
+
+    /* Shadows do almost nothing on a dark ground; the border carries the
+       elevation instead, so they are kept only as a soft ambient depth. */
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, .4);
+    --shadow-2: 0 2px 8px rgba(0, 0, 0, .45);
+    --shadow-3: 0 10px 30px rgba(0, 0, 0, .55);
 
     /* Bootstrap's own surfaces, so cards, tables, inputs and dropdowns sit on
        the same palette rather than the stock near-black. */
-    --bs-body-bg:       var(--app-page-bg);
-    --bs-border-color:  var(--app-border);
-    --bs-tertiary-bg:   var(--app-muted-bg);
+    --bs-body-bg:      var(--app-page-bg);
+    --bs-body-color:   var(--app-ink);
+    --bs-border-color: var(--app-border);
+    --bs-tertiary-bg:  var(--app-surface-2);
+    --bs-secondary-bg: var(--app-surface-2);
+    --bs-emphasis-color: var(--app-ink);
 }
 
+/* -------------------------------------------------------- 3 Bootstrap remap
+ * Bootstrap ships blue. Rather than override every component that uses it,
+ * repoint the variables the components already read.
+ */
+:root,
+[data-bs-theme="dark"] {
+    --bs-primary:            var(--app-brand);
+    --bs-primary-rgb:        11, 107, 70;
+    --bs-link-color:         var(--app-brand);
+    --bs-link-hover-color:   var(--app-brand-strong);
+    --bs-border-radius:      var(--radius);
+    --bs-border-radius-sm:   var(--radius-sm);
+    --bs-border-radius-lg:   var(--radius-lg);
+    --bs-body-font-family:   var(--font-body);
+    --bs-focus-ring-color:   color-mix(in srgb, var(--app-brand) 35%, transparent);
+}
+
+[data-bs-theme="dark"] {
+    --bs-primary-rgb: 61, 220, 151;
+}
+
+/* ------------------------------------------------------ 4 base + typography */
 body {
     background-color: var(--app-page-bg);
+    color: var(--app-ink);
+    font-family: var(--font-body);
+    /* Inter's default figures are proportional, which makes prices and seat
+       counts jitter as they change. */
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Cards and tables default to --bs-body-bg, which would make them vanish into
-   the page in dark mode. Lift them onto the surface token instead. */
-.card {
-    --bs-card-bg: var(--app-surface);
-    --bs-card-border-color: var(--app-border);
+h1, h2, h3, .display-1, .display-2, .display-3,
+.h1, .h2, .h3, .app-display {
+    font-family: var(--font-display);
+    letter-spacing: -.015em;
+    line-height: 1.15;
 }
 
-.list-group {
-    --bs-list-group-bg: var(--app-surface);
-    --bs-list-group-border-color: var(--app-border);
+h4, h5, h6, .h4, .h5, .h6 {
+    font-family: var(--font-display);
+    letter-spacing: -.005em;
 }
 
-.table {
-    --bs-table-bg: transparent;
+p, li { line-height: 1.6; }
+
+.text-muted,
+.text-body-secondary { color: var(--app-ink-muted) !important; }
+
+/* A one-line kicker above a section heading. */
+.app-eyebrow {
+    font-family: var(--font-display);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--app-brand);
 }
+
+.app-accent { color: var(--app-accent) !important; }
+
+/* Skip link: off-screen until focused. Keyboard users otherwise tab the whole
+   navigation on every page before reaching the content. */
+.app-skip {
+    position: absolute;
+    left: .5rem;
+    top: .5rem;
+    z-index: 1100;
+    padding: .625rem 1rem;
+    border-radius: var(--radius-sm);
+    background: var(--app-brand);
+    color: var(--app-brand-ink);
+    font-weight: 600;
+    text-decoration: none;
+    /* Moved with transform rather than `top`, for the same reason as
+       everything else here: `top` is a layout property, so animating it
+       forces a reflow on the first thing a keyboard user ever touches. */
+    transform: translateY(-200%);
+    transition: transform var(--dur-micro) var(--ease-out);
+}
+
+.app-skip:focus { transform: none; color: var(--app-brand-ink); }
+
+/* One visible focus treatment everywhere, rather than Bootstrap's mix of
+   box-shadow rings and browser defaults.
+ *
+ * The component selectors are not redundant. Bootstrap ships
+ * `.btn:focus-visible { outline: 0 }`, which is two classes' worth of
+ * specificity and beats a bare `:focus-visible` — so with only the element
+ * rule below, every button on the site had no keyboard focus ring at all
+ * while appearing to have one in the stylesheet. Found by tabbing to a button
+ * and reading its computed outline-width, which is the only way this shows up:
+ * it is invisible to anyone using a mouse.
+ */
+:focus-visible,
+.btn:focus-visible,
+.btn-close:focus-visible,
+.app-icon-btn:focus-visible,
+.app-user-btn:focus-visible,
+.dropdown-item:focus-visible,
+.list-group-item:focus-visible,
+.form-check-input:focus-visible,
+.page-link:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--app-brand) 55%, transparent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+/* ----------------------------------------------------------------- 5 layout */
+.app-section { padding-block: clamp(2.5rem, 6vw, 4.5rem); }
+.app-section-tight { padding-block: clamp(1.75rem, 4vw, 2.75rem); }
+
+.app-section-alt {
+    background: var(--app-surface);
+    border-block: 1px solid var(--app-border-soft);
+}
+
+.app-section-head { margin-bottom: 1.75rem; }
+.app-section-head h2 { margin-bottom: .35rem; }
+.app-section-head p  { color: var(--app-ink-muted); margin-bottom: 0; max-width: 56ch; }
 
 .page-hero {
-    padding: 1.5rem 0 0.5rem;
-    border-bottom: 1px solid var(--app-border);
+    padding: 1.75rem 0 1rem;
+    border-bottom: 1px solid var(--app-border-soft);
+    margin-bottom: 1.75rem;
 }
 
-/* The navbar stays dark in both themes; it is the one fixed surface in the
-   layout. In dark mode it is a shade below the page so the edge still reads. */
-.navbar {
-    background-color: var(--app-navbar-bg) !important;
-    border-bottom: 1px solid transparent;
+.page-hero h1 { margin-bottom: .35rem; }
+.page-hero p  { color: var(--app-ink-muted); margin-bottom: 0; }
+
+/* ------------------------------------------------------------- 6 navigation
+ * The navbar was hardcoded `navbar-dark bg-dark`, which made it the one
+ * surface in the layout that ignored the theme. It is a themed surface now.
+ */
+.app-nav {
+    background: color-mix(in srgb, var(--app-surface) 88%, transparent);
+    backdrop-filter: saturate(160%) blur(12px);
+    border-bottom: 1px solid var(--app-border-soft);
+    transition: box-shadow var(--dur) var(--ease-out),
+                border-color var(--dur) var(--ease-out);
 }
 
-[data-bs-theme="dark"] .navbar {
+.app-nav.is-scrolled {
+    box-shadow: var(--shadow-2);
     border-bottom-color: var(--app-border);
 }
 
-/* The nav mixes anchors, a plain text span and form buttons, each with its own
-   intrinsic height. Without this the items align to the top of the flex row and
-   the signed-in name rides above the links either side of it. */
-.navbar .navbar-nav {
-    align-items: center;
-}
-
-/* The logout control is a form button so it can POST with a CSRF token; this
-   makes it sit flush with the anchor-based nav items beside it. */
-.navbar .btn-link.nav-link {
-    border: 0;
-    padding: 0.5rem 0.5rem;
-    text-decoration: none;
-    vertical-align: baseline;
-}
-
-/* Theme toggle: show whichever icon represents the theme you would switch to. */
-.theme-toggle {
+.app-brand {
     display: inline-flex;
     align-items: center;
-    opacity: 0.85;
+    gap: .625rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.0625rem;
+    letter-spacing: -.02em;
+    color: var(--app-ink);
+    text-decoration: none;
 }
 
-.theme-toggle:hover {
-    opacity: 1;
+.app-brand:hover { color: var(--app-ink); }
+.app-brand-mark  { color: var(--app-brand); flex: 0 0 auto; }
+.app-brand-sub {
+    display: block;
+    font-family: var(--font-body);
+    font-size: .6875rem;
+    font-weight: 500;
+    letter-spacing: .04em;
+    color: var(--app-ink-muted);
+}
+
+.app-nav .nav-link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: .875rem;
+    font-weight: 500;
+    color: var(--app-ink-muted);
+    transition: color var(--dur-micro) var(--ease-out);
+}
+
+.app-nav .nav-link:hover,
+.app-nav .nav-link:focus-visible { color: var(--app-ink); }
+
+.app-nav .nav-link[aria-current="page"] { color: var(--app-ink); font-weight: 600; }
+
+/* The active indicator is a scaled pseudo-element rather than a width
+   animation: transforms do not trigger layout. */
+.app-nav .nav-link::after {
+    content: "";
+    position: absolute;
+    left: .875rem;
+    right: .875rem;
+    bottom: .25rem;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--app-brand);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-micro) var(--ease-out);
+}
+
+.app-nav .nav-link[aria-current="page"]::after { transform: scaleX(1); }
+
+/* Icon-only controls: 44x44 minimum, per the touch-target rule. The visual
+   glyph stays 18px; the padding does the work. */
+.app-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--app-ink-muted);
+    transition: background var(--dur-micro) var(--ease-out),
+                color var(--dur-micro) var(--ease-out);
+}
+
+.app-icon-btn:hover,
+.app-icon-btn:focus-visible {
+    background: var(--app-surface-2);
+    color: var(--app-ink);
 }
 
 .theme-toggle .icon-moon { display: none; }
 .theme-toggle .icon-sun  { display: inline-block; }
-
 [data-bs-theme="dark"] .theme-toggle .icon-moon { display: inline-block; }
 [data-bs-theme="dark"] .theme-toggle .icon-sun  { display: none; }
 
-/* Fixture card thumbnails: fixed box so cards in a row line up regardless of
-   the source image's aspect ratio. */
-.match-thumb {
+/* Signed-in identity: an initial rather than a name that wraps the nav. */
+.app-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--app-brand-soft);
+    color: var(--app-brand);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: .875rem;
+}
+
+.app-user-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    min-height: 44px;
+    padding: .25rem .5rem;
+    border: 1px solid var(--app-border-soft);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--app-ink);
+    font-size: .875rem;
+    font-weight: 500;
+    transition: border-color var(--dur-micro) var(--ease-out),
+                background var(--dur-micro) var(--ease-out);
+}
+
+.app-user-btn:hover,
+.app-user-btn:focus-visible {
+    background: var(--app-surface-2);
+    border-color: var(--app-border);
+    color: var(--app-ink);
+}
+
+.dropdown-menu {
+    --bs-dropdown-bg: var(--app-surface);
+    --bs-dropdown-border-color: var(--app-border-soft);
+    --bs-dropdown-link-color: var(--app-ink);
+    --bs-dropdown-link-hover-bg: var(--app-surface-2);
+    --bs-dropdown-link-hover-color: var(--app-ink);
+    box-shadow: var(--shadow-2);
+}
+
+/* The log-out control is a form button so it can POST with a CSRF token.
+   This makes it sit flush with the anchor-based items beside it. */
+.dropdown-item-form { margin: 0; }
+.dropdown-item-form button {
+    width: 100%;
+    text-align: left;
+    border: 0;
+    background: none;
+}
+
+/* Destructive/exit actions sit below a rule, never inline with navigation. */
+.dropdown-item-danger { color: var(--app-danger) !important; }
+.dropdown-item-danger:hover { background: var(--app-danger-soft) !important; }
+
+.offcanvas {
+    --bs-offcanvas-bg: var(--app-surface);
+    --bs-offcanvas-color: var(--app-ink);
+    --bs-offcanvas-border-color: var(--app-border-soft);
+}
+
+.offcanvas .nav-link { min-height: 48px; font-size: 1.0625rem; }
+
+/* ------------------------------------------------------- 7 buttons + forms */
+.btn {
+    --bs-btn-font-weight: 600;
+    --bs-btn-padding-y: .5625rem;
+    --bs-btn-padding-x: 1.125rem;
+    transition: transform var(--dur-micro) var(--ease-out),
+                background-color var(--dur-micro) var(--ease-out),
+                border-color var(--dur-micro) var(--ease-out),
+                box-shadow var(--dur-micro) var(--ease-out);
+}
+
+.btn:active:not(:disabled) { transform: scale(.98); }
+
+.btn-primary {
+    --bs-btn-bg: var(--app-brand);
+    --bs-btn-border-color: var(--app-brand);
+    --bs-btn-color: var(--app-brand-ink);
+    --bs-btn-hover-bg: var(--app-brand-strong);
+    --bs-btn-hover-border-color: var(--app-brand-strong);
+    --bs-btn-hover-color: var(--app-brand-ink);
+    --bs-btn-active-bg: var(--app-brand-strong);
+    --bs-btn-active-border-color: var(--app-brand-strong);
+    --bs-btn-active-color: var(--app-brand-ink);
+    --bs-btn-disabled-bg: var(--app-brand);
+    --bs-btn-disabled-border-color: var(--app-brand);
+    --bs-btn-disabled-color: var(--app-brand-ink);
+    box-shadow: var(--shadow-1);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--app-brand);
+    --bs-btn-border-color: var(--app-border);
+    --bs-btn-hover-bg: var(--app-brand-soft);
+    --bs-btn-hover-border-color: var(--app-brand);
+    --bs-btn-hover-color: var(--app-brand);
+    --bs-btn-active-bg: var(--app-brand-soft);
+    --bs-btn-active-border-color: var(--app-brand);
+    --bs-btn-active-color: var(--app-brand);
+}
+
+/* A quiet button for secondary actions — visually subordinate to the one
+   primary CTA per screen. */
+.btn-ghost {
+    --bs-btn-color: var(--app-ink);
+    --bs-btn-border-color: var(--app-border);
+    --bs-btn-bg: transparent;
+    --bs-btn-hover-bg: var(--app-surface-2);
+    --bs-btn-hover-border-color: var(--app-border);
+    --bs-btn-hover-color: var(--app-ink);
+}
+
+.btn:disabled, .btn.disabled { opacity: .45; }
+
+.form-control, .form-select {
+    background-color: var(--app-surface);
+    border-color: var(--app-border);
+    color: var(--app-ink);
+    /* 16px minimum: anything smaller makes iOS Safari zoom the viewport on
+       focus, which then cannot be zoomed back out by the user. */
+    font-size: 1rem;
+    min-height: 44px;
+    padding: .5625rem .75rem;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: var(--app-surface);
+    border-color: var(--app-brand);
+    color: var(--app-ink);
+    box-shadow: 0 0 0 .2rem color-mix(in srgb, var(--app-brand) 22%, transparent);
+}
+
+.form-label { font-weight: 600; font-size: .875rem; margin-bottom: .375rem; }
+.form-text  { color: var(--app-ink-muted); }
+
+.invalid-feedback, .app-field-error {
+    display: block;
+    color: var(--app-danger);
+    font-size: .8125rem;
+    margin-top: .375rem;
+}
+
+/* Password reveal, tucked inside the field rather than beside it. */
+.app-password { position: relative; }
+.app-password .form-control { padding-right: 3.25rem; }
+.app-password button {
+    position: absolute;
+    right: .125rem;
+    top: 50%;
+    transform: translateY(-50%);
+    /* 44px, not the 40px that fits neatly inside the field: this is a real
+       control and a thumb has to hit it. */
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--app-ink-muted);
+}
+
+.app-password button:hover { color: var(--app-ink); background: var(--app-surface-2); }
+.app-password .icon-hide { display: none; }
+.app-password.is-shown .icon-hide { display: block; }
+.app-password.is-shown .icon-show { display: none; }
+
+.alert {
+    border-radius: var(--radius);
+    border-width: 1px;
+    display: flex;
+    gap: .625rem;
+    align-items: flex-start;
+}
+
+.alert svg { flex: 0 0 auto; margin-top: .125rem; }
+
+.alert-success { background: var(--app-brand-soft); border-color: var(--app-brand); color: var(--app-ink); }
+.alert-danger  { background: var(--app-danger-soft); border-color: var(--app-danger); color: var(--app-ink); }
+.alert-info    { background: var(--app-surface-2); border-color: var(--app-border); color: var(--app-ink); }
+.alert-warning { background: var(--app-accent-soft); border-color: var(--app-accent); color: var(--app-ink); }
+
+/* ---------------------------------------------- 8 cards, fixtures, badges */
+.card {
+    --bs-card-bg: var(--app-surface);
+    --bs-card-border-color: var(--app-border-soft);
+    --bs-card-border-radius: var(--radius);
+    box-shadow: var(--shadow-1);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom-color: var(--app-border-soft);
+    padding: 1rem 1.25rem;
+}
+
+.list-group {
+    --bs-list-group-bg: var(--app-surface);
+    --bs-list-group-border-color: var(--app-border-soft);
+    --bs-list-group-color: var(--app-ink);
+    --bs-list-group-action-hover-bg: var(--app-surface-2);
+    --bs-list-group-action-hover-color: var(--app-ink);
+    --bs-list-group-active-bg: var(--app-brand);
+    --bs-list-group-active-border-color: var(--app-brand);
+    --bs-list-group-active-color: var(--app-brand-ink);
+}
+
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--app-ink);
+    --bs-table-border-color: var(--app-border-soft);
+    --bs-table-striped-bg: var(--app-surface-2);
+    --bs-table-striped-color: var(--app-ink);
+}
+
+.table > thead th {
+    font-family: var(--font-display);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--app-ink-muted);
+    border-bottom-color: var(--app-border);
+}
+
+/* --- the fixture card --- */
+.fixture-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid var(--app-border-soft);
+    border-radius: var(--radius);
+    background: var(--app-surface);
+    box-shadow: var(--shadow-1);
+    transition: transform var(--dur) var(--ease-out),
+                box-shadow var(--dur) var(--ease-out),
+                border-color var(--dur) var(--ease-out);
+}
+
+.fixture-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-3);
+    border-color: var(--app-border);
+}
+
+.fixture-card:has(a:active) { transform: scale(.995); }
+
+/* Fixed box so cards in a row line up regardless of the artwork's ratio. */
+.fixture-art {
+    position: relative;
     aspect-ratio: 16 / 9;
+    background-color: var(--app-night);
+    overflow: hidden;
+}
+
+.fixture-art > img.fixture-art-bg {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    background-color: var(--app-thumb-bg);
+    display: block;
+}
+
+.fixture-art-crests {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(.75rem, 4vw, 1.5rem);
+}
+
+.fixture-art-crests img {
+    width: clamp(44px, 18%, 62px);
+    height: auto;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .55));
+    transition: transform var(--dur) var(--ease-out);
+}
+
+.fixture-card:hover .fixture-art-crests img:first-child { transform: translateX(-3px); }
+.fixture-card:hover .fixture-art-crests img:last-child  { transform: translateX(3px); }
+
+.fixture-art-v {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: .875rem;
+    color: rgba(255, 255, 255, .75);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+/* Date chip, top-left of the artwork. */
+.fixture-art-date {
+    position: absolute;
+    top: .625rem;
+    left: .625rem;
+    padding: .25rem .5rem;
+    border-radius: var(--radius-sm);
+    background: rgba(11, 17, 22, .72);
+    color: #f2f6f4;
+    font-family: var(--font-display);
+    font-size: .6875rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.fixture-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    padding: 1.125rem 1.25rem 1.25rem;
+}
+
+.fixture-title {
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: .5rem;
+}
+
+.fixture-title a { color: var(--app-ink); text-decoration: none; }
+.fixture-title a:hover { color: var(--app-brand); }
+
+/* The whole card is clickable via a stretched link, but the link text stays
+   the fixture name so a screen reader announces something meaningful. */
+.fixture-title a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+.fixture-card { position: relative; }
+
+.fixture-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .375rem .75rem;
+    font-size: .8125rem;
+    color: var(--app-ink-muted);
+    margin-bottom: .875rem;
+}
+
+.fixture-meta span { display: inline-flex; align-items: center; gap: .3125rem; }
+
+.fixture-tiers {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: .75rem 0 0;
+    border-top: 1px solid var(--app-border-soft);
+    display: grid;
+    gap: .4375rem;
+    font-size: .8125rem;
+}
+
+.fixture-tiers li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: .75rem;
+}
+
+.fixture-tier-name { color: var(--app-ink-muted); }
+.fixture-tier-price { font-weight: 600; color: var(--app-ink); }
+
+.fixture-cta { margin-top: auto; position: relative; z-index: 2; }
+
+/* Availability pills. Colour alone never carries the meaning — the text says
+   "Sold out" / "3 left" as well. */
+.seat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .3125rem;
+    padding: .0625rem .4375rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.seat-pill-ok   { background: var(--app-brand-soft);  color: var(--app-brand); }
+.seat-pill-low  { background: var(--app-accent-soft); color: var(--app-accent); }
+.seat-pill-none { background: var(--app-danger-soft); color: var(--app-danger); }
+
+/* ----------------------------------------------------------- 9 landing page */
+.hero {
+    position: relative;
+    overflow: hidden;
+    padding-block: clamp(3rem, 9vw, 6rem);
+    border-bottom: 1px solid var(--app-border-soft);
+    background:
+        radial-gradient(90rem 40rem at 15% -20%, var(--app-brand-soft), transparent 60%),
+        radial-gradient(60rem 30rem at 95% 0%, color-mix(in srgb, var(--app-accent) 12%, transparent), transparent 55%),
+        var(--app-page-bg);
+}
+
+/* Pitch markings, drawn in CSS rather than shipped as an image. */
+.hero::after {
+    content: "";
+    position: absolute;
+    right: -10%;
+    bottom: -55%;
+    width: 46rem;
+    height: 46rem;
+    border-radius: 50%;
+    border: 1px solid var(--app-border);
+    opacity: .5;
+    pointer-events: none;
+}
+
+.hero-inner { position: relative; z-index: 1; }
+
+.hero h1 {
+    font-size: clamp(2.25rem, 5.5vw, 3.75rem);
+    font-weight: 700;
+    margin-bottom: 1rem;
+    max-width: 18ch;
+}
+
+.hero-lead {
+    font-size: clamp(1.0625rem, 1.6vw, 1.1875rem);
+    color: var(--app-ink-muted);
+    max-width: 58ch;
+    margin-bottom: 1.75rem;
+}
+
+.hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+
+.hero-proof {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 2.5rem;
+    margin-top: 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--app-border-soft);
+}
+
+.hero-proof div { min-width: 7rem; }
+
+.stat-value {
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--app-ink);
+}
+
+.stat-label {
+    display: block;
+    font-size: .8125rem;
+    color: var(--app-ink-muted);
+    margin-top: .1875rem;
+}
+
+/* --- next-fixture spotlight --- */
+.spotlight {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow: hidden;
+    border: 1px solid var(--app-border-soft);
+    border-radius: var(--radius-lg);
+    background: var(--app-surface);
+    box-shadow: var(--shadow-2);
+}
+
+@media (min-width: 768px) {
+    .spotlight { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
+}
+
+.spotlight-art { position: relative; background: var(--app-night); min-height: 15rem; }
+.spotlight-art > img.fixture-art-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.spotlight-body { padding: clamp(1.25rem, 3vw, 2rem); }
+
+.countdown {
+    display: flex;
+    gap: .5rem;
+    margin: 1rem 0 1.25rem;
+}
+
+.countdown div {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: .625rem .25rem;
+    text-align: center;
+    border: 1px solid var(--app-border-soft);
+    border-radius: var(--radius-sm);
+    background: var(--app-surface-2);
+}
+
+.countdown b {
+    display: block;
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 3.5vw, 1.75rem);
+    font-weight: 700;
+    line-height: 1.1;
+    /* Tabular figures, or every tick of the seconds column shifts the row. */
+    font-variant-numeric: tabular-nums;
+}
+
+.countdown span {
+    display: block;
+    font-size: .6875rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--app-ink-muted);
+    margin-top: .125rem;
+}
+
+/* --- how it works --- */
+.step {
+    height: 100%;
+    padding: 1.5rem;
+    border: 1px solid var(--app-border-soft);
+    border-radius: var(--radius);
+    background: var(--app-surface);
+    box-shadow: var(--shadow-1);
+}
+
+.step-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-bottom: 1rem;
+    border-radius: var(--radius-sm);
+    background: var(--app-brand-soft);
+    color: var(--app-brand);
+}
+
+.step h3 { font-size: 1.0625rem; margin-bottom: .5rem; }
+.step p  { color: var(--app-ink-muted); font-size: .9375rem; margin-bottom: 0; }
+
+.step-index {
+    font-family: var(--font-display);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: var(--app-brand);
+    display: block;
+    margin-bottom: .375rem;
+}
+
+/* --- venues --- */
+.venue-card {
+    display: block;
+    overflow: hidden;
+    border: 1px solid var(--app-border-soft);
+    border-radius: var(--radius);
+    background: var(--app-surface);
+    color: inherit;
+    text-decoration: none;
+    box-shadow: var(--shadow-1);
+    transition: transform var(--dur) var(--ease-out),
+                box-shadow var(--dur) var(--ease-out);
+}
+
+.venue-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-3); color: inherit; }
+.venue-card img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+.venue-card-body { padding: .875rem 1rem 1rem; }
+.venue-card h3 { font-size: .9375rem; margin-bottom: .1875rem; }
+.venue-card p  { font-size: .8125rem; color: var(--app-ink-muted); margin-bottom: 0; }
+
+/* --- closing CTA --- */
+.cta-band {
+    padding: clamp(2rem, 5vw, 3rem);
+    border-radius: var(--radius-lg);
+    background:
+        radial-gradient(40rem 20rem at 80% 0%, color-mix(in srgb, var(--app-brand) 22%, transparent), transparent 65%),
+        var(--app-surface-2);
+    border: 1px solid var(--app-border-soft);
+}
+
+/* ---------------------------------------------------- 10 booking + tickets */
+.filter-bar {
+    position: sticky;
+    top: 4.5rem;
+    z-index: 10;
+    padding: .875rem 1rem;
+    margin-bottom: 1.75rem;
+    border: 1px solid var(--app-border-soft);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--app-surface) 92%, transparent);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-1);
 }
 
 .tier-option {
-    padding: 0.6rem 0.75rem 0.6rem 2rem;
-    border: 1px solid var(--app-border);
-    border-radius: 0.375rem;
-    margin-bottom: 0.5rem;
+    position: relative;
+    padding: .875rem 1rem .875rem 2.75rem;
+    border: 1px solid var(--app-border-soft);
+    border-radius: var(--radius);
+    margin-bottom: .625rem;
+    background: var(--app-surface);
+    transition: border-color var(--dur-micro) var(--ease-out),
+                background var(--dur-micro) var(--ease-out);
 }
+
+.tier-option .form-check-input {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-color: var(--app-border);
+}
+
+.tier-option .form-check-input:checked {
+    background-color: var(--app-brand);
+    border-color: var(--app-brand);
+}
+
+.tier-option:hover:not(:has(input:disabled)) { border-color: var(--app-border); }
 
 .tier-option:has(input:checked) {
-    border-color: var(--app-tier-border);
-    background-color: var(--app-tier-bg);
+    border-color: var(--app-brand);
+    background: var(--app-brand-soft);
+    box-shadow: 0 0 0 1px var(--app-brand);
 }
 
-.tier-option:has(input:disabled) {
-    background-color: var(--app-muted-bg);
+.tier-option:has(input:disabled) { background: var(--app-surface-2); opacity: .72; }
+.tier-option label { cursor: pointer; width: 100%; }
+.tier-option:has(input:disabled) label { cursor: not-allowed; }
+
+.tier-name { font-family: var(--font-display); font-weight: 700; font-size: 1rem; }
+.tier-price { font-weight: 600; }
+
+/* Availability in the tier chooser.
+ *
+ * These two class names are not a styling choice — tests/verify.sh reads the
+ * booking page over HTTP and greps for `<span class="text-success">` after
+ * `id="tier-vip"` to find out what the page claims is left. Renaming them to
+ * .seat-pill would break the only assertion that checks the rendered count
+ * against the database, so they are given the pill's appearance here instead.
+ */
+.tier-option .text-success,
+.tier-option .text-danger {
+    display: inline-flex;
+    align-items: center;
+    padding: .1875rem .5625rem;
+    border-radius: 999px;
+    font-size: .8125rem;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
-footer {
-    background-color: var(--app-surface);
-    border-color: var(--app-border) !important;
+.tier-option .text-success {
+    background: var(--app-brand-soft);
+    color: var(--app-brand) !important;
+}
+
+.tier-option .text-danger {
+    background: var(--app-danger-soft);
+    color: var(--app-danger) !important;
+}
+
+/* Bootstrap's stock green and red are not this palette's. */
+.text-success { color: var(--app-brand) !important; }
+.text-danger  { color: var(--app-danger) !important; }
+
+.breadcrumb {
+    --bs-breadcrumb-divider-color: var(--app-ink-muted);
+    --bs-breadcrumb-item-active-color: var(--app-ink-muted);
+}
+
+.breadcrumb a { color: var(--app-ink-muted); text-decoration: none; }
+.breadcrumb a:hover { color: var(--app-brand); }
+
+/* --- ticket stubs --- */
+.ticket {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    padding: 1.25rem;
+    border: 1px solid var(--app-border-soft);
+    border-radius: var(--radius);
+    background: var(--app-surface);
+    box-shadow: var(--shadow-1);
+    overflow: hidden;
+}
+
+/* The perforation: a dashed rule with a notch punched out of each end. */
+.ticket-stub {
+    position: relative;
+    padding-left: 1.25rem;
+    border-left: 2px dashed var(--app-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-width: 6.5rem;
+}
+
+.ticket-stub::before,
+.ticket-stub::after {
+    content: "";
+    position: absolute;
+    left: -9px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--app-page-bg);
+    border: 1px solid var(--app-border-soft);
+}
+
+.ticket-stub::before { top: -1.85rem; }
+.ticket-stub::after  { bottom: -1.85rem; }
+
+.ticket-ref {
+    font-family: var(--font-display);
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: var(--app-ink-muted);
+}
+
+.ticket-tier {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--app-brand);
+    margin-top: .125rem;
+}
+
+.ticket-paid { font-size: .8125rem; color: var(--app-ink-muted); margin-top: .25rem; }
+.ticket h2 { font-size: 1.0625rem; margin-bottom: .375rem; }
+
+.empty-state {
+    padding: clamp(2rem, 6vw, 3.5rem) 1.5rem;
+    text-align: center;
+    border: 1px dashed var(--app-border);
+    border-radius: var(--radius);
+    background: var(--app-surface);
+}
+
+.empty-state svg { color: var(--app-ink-muted); margin-bottom: 1rem; }
+.empty-state p { color: var(--app-ink-muted); max-width: 40ch; margin: 0 auto 1.25rem; }
+
+/* --------------------------------------------------------------- 11 admin */
+.admin-nav .list-group-item {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    min-height: 44px;
+    font-weight: 500;
+    border-color: var(--app-border-soft);
+}
+
+.stat-tile {
+    height: 100%;
+    padding: 1rem 1.125rem;
+    border: 1px solid var(--app-border-soft);
+    border-radius: var(--radius);
+    background: var(--app-surface);
+    box-shadow: var(--shadow-1);
+}
+
+.stat-tile .stat-value { font-size: 1.625rem; }
+
+/* -------------------------------------------------------------- 12 footer */
+.app-footer {
+    background: var(--app-surface);
+    border-top: 1px solid var(--app-border-soft);
+    margin-top: 4rem;
+    padding-block: 2.5rem 2rem;
+}
+
+.app-footer h2 {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--app-ink-muted);
+    margin-bottom: .875rem;
+}
+
+.app-footer ul { list-style: none; margin: 0; padding: 0; }
+.app-footer li { margin-bottom: .5rem; }
+.app-footer a { color: var(--app-ink-muted); text-decoration: none; }
+.app-footer a:hover { color: var(--app-brand); text-decoration: underline; }
+
+.app-footer-base {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--app-border-soft);
+    font-size: .8125rem;
+    color: var(--app-ink-muted);
+}
+
+/* -------------------------------------------------------------- 13 motion
+ * Everything here animates transform and opacity only. Animating width,
+ * height, top or left forces layout on every frame and shows up as jank on
+ * exactly the low-end phones this most needs to work on.
+ */
+[data-reveal] {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity var(--dur) var(--ease-out),
+                transform var(--dur) var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 45ms);
+}
+
+[data-reveal].is-in { opacity: 1; transform: none; }
+
+/* If JavaScript never runs, the observer never adds .is-in and the whole page
+   stays invisible. This is the failure mode that matters most, so the initial
+   hidden state is applied by script rather than assumed here. */
+.no-js [data-reveal] { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    [data-reveal] { opacity: 1 !important; transform: none !important; }
+    .fixture-card:hover, .venue-card:hover { transform: none; }
+}
+
+/* Bootstrap's close button is a 32px box. That is under the 44px minimum on a
+   touch screen, and it is the only way out of the mobile menu. */
+.btn-close {
+    width: 44px;
+    height: 44px;
+    background-size: 14px;
+    border-radius: var(--radius-sm);
+}
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width: 767.98px) {
+    .filter-bar { position: static; }
+
+    /* .btn-sm is 41px tall, which reads fine with a mouse and misses with a
+       thumb. Small screens get the full target; wider ones keep the compact
+       button, where pointer accuracy is not the constraint. */
+    .btn, .btn-sm { min-height: 44px; }
+    .hero::after { display: none; }
+    .ticket { grid-template-columns: 1fr; }
+    .ticket-stub {
+        border-left: 0;
+        border-top: 2px dashed var(--app-border);
+        padding-left: 0;
+        padding-top: 1rem;
+        flex-direction: row;
+        gap: .75rem;
+        justify-content: flex-start;
+        text-align: left;
+    }
+    .ticket-stub::before, .ticket-stub::after { display: none; }
 }
 
 /* Admin tables carry more columns than a phone can show; the .table-responsive
    wrapper scrolls the table rather than the page. */
 @media (max-width: 575.98px) {
-    .table-responsive table {
-        font-size: 0.875rem;
-    }
+    .table-responsive table { font-size: .875rem; }
 }

@@ -77,6 +77,56 @@ function seats_remaining_all(PDO $pdo, int $matchId): array
 }
 
 /**
+ * Remaining seats for every tier of every match, keyed [mid][tier].
+ *
+ * seats_remaining_all() costs three queries per match, which is fine on the
+ * booking page — it shows one. The fixtures listing shows all of them, and
+ * calling it in the render loop is the classic N+1: six fixtures became
+ * eighteen round trips before a byte of HTML was sent. One grouped count over
+ * the whole bookings table answers the same question once.
+ *
+ * Matches with no bookings at all have no row in the aggregate, so the
+ * capacities are read first and the counts subtracted from them, rather than
+ * building the result from the bookings side and losing the empty fixtures.
+ */
+function seats_remaining_many(PDO $pdo): array
+{
+    $capacityColumns = [];
+    foreach (SEAT_TIERS as $tier) {
+        $capacityColumns[] = 's.' . tier_capacity_column($tier) . ' AS cap_' . $tier;
+    }
+
+    $remaining = [];
+    $capacities = $pdo->query(
+        'SELECT m.mid, ' . implode(', ', $capacityColumns) . '
+           FROM matches m
+           JOIN stadium s ON s.sid = m.venue'
+    );
+
+    foreach ($capacities as $row) {
+        foreach (SEAT_TIERS as $tier) {
+            $remaining[(int) $row['mid']][$tier] = (int) $row['cap_' . $tier];
+        }
+    }
+
+    $booked = $pdo->query(
+        'SELECT mid, seat_tier, COUNT(*) AS taken
+           FROM bookings
+          GROUP BY mid, seat_tier'
+    );
+
+    foreach ($booked as $row) {
+        $mid  = (int) $row['mid'];
+        $tier = (string) $row['seat_tier'];
+        if (isset($remaining[$mid][$tier])) {
+            $remaining[$mid][$tier] = max(0, $remaining[$mid][$tier] - (int) $row['taken']);
+        }
+    }
+
+    return $remaining;
+}
+
+/**
  * Create a booking, or explain why not.
  *
  * Correctness rests on three layers, deliberately:

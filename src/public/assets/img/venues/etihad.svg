@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" role="img" aria-label="Etihad Stadium">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1116"/>
+      <stop offset="1" stop-color="#304c62"/>
+    </linearGradient>
+    <radialGradient id="beam" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#fff8e1" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#fff8e1" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pitch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#184533"/>
+      <stop offset="1" stop-color="#133329"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="225" fill="url(#sky)"/>
+  <g><ellipse cx="52" cy="34" rx="54" ry="40" fill="url(#beam)"/><rect x="49.5" y="40" width="5" height="72" fill="#203342"/><rect x="30" y="16" width="44" height="26" rx="4" fill="#203342"/><g fill="#fdf6e3"><circle cx="37" cy="26" r="2.6"/><circle cx="47" cy="26" r="2.6"/><circle cx="57" cy="26" r="2.6"/><circle cx="67" cy="26" r="2.6"/><circle cx="37" cy="35" r="2.6"/><circle cx="47" cy="35" r="2.6"/><circle cx="57" cy="35" r="2.6"/><circle cx="67" cy="35" r="2.6"/></g></g>
+  <g><ellipse cx="348" cy="34" rx="54" ry="40" fill="url(#beam)"/><rect x="345.5" y="40" width="5" height="72" fill="#203342"/><rect x="326" y="16" width="44" height="26" rx="4" fill="#203342"/><g fill="#fdf6e3"><circle cx="333" cy="26" r="2.6"/><circle cx="343" cy="26" r="2.6"/><circle cx="353" cy="26" r="2.6"/><circle cx="363" cy="26" r="2.6"/><circle cx="333" cy="35" r="2.6"/><circle cx="343" cy="35" r="2.6"/><circle cx="353" cy="35" r="2.6"/><circle cx="363" cy="35" r="2.6"/></g></g>
+
+  <!-- Far stand: roof line, then the crowd behind it. -->
+  <path d="M0 66 L400 66 L400 112 L0 112 Z" fill="#203342"/>
+  <path d="M0 66 L400 66 L400 60 L0 60 Z" fill="#3b4b59"/>
+  <g fill="#34526a" opacity=".85">
+    <rect x="18" y="74" width="26" height="9" rx="2.5"/>
+    <rect x="50" y="74" width="26" height="9" rx="2.5"/>
+    <rect x="82" y="74" width="26" height="9" rx="2.5"/>
+    <rect x="114" y="74" width="26" height="9" rx="2.5"/>
+    <rect x="146" y="74" width="26" height="9" rx="2.5"/>
+    <rect x="178" y="74" width="26" height="9" rx="2.5"/>
+    <rect x="210" y="74" width="26" height="9" rx="2.5"/>
+    <rect x="242" y="74" width="26" height="9" rx="2.5"/>
+    <rect x="274" y="74" width="26" height="9" rx="2.5"/>
+    <rect x="306" y="74" width="26" height="9" rx="2.5"/>
+    <rect x="338" y="74" width="26" height="9" rx="2.5"/>
+    <rect x="370" y="74" width="26" height="9" rx="2.5"/>
+    <rect x="18" y="88" width="26" height="9" rx="2.5"/>
+    <rect x="50" y="88" width="26" height="9" rx="2.5"/>
+    <rect x="82" y="88" width="26" height="9" rx="2.5"/>
+    <rect x="114" y="88" width="26" height="9" rx="2.5"/>
+    <rect x="146" y="88" width="26" height="9" rx="2.5"/>
+    <rect x="178" y="88" width="26" height="9" rx="2.5"/>
+    <rect x="210" y="88" width="26" height="9" rx="2.5"/>
+    <rect x="242" y="88" width="26" height="9" rx="2.5"/>
+    <rect x="274" y="88" width="26" height="9" rx="2.5"/>
+    <rect x="306" y="88" width="26" height="9" rx="2.5"/>
+    <rect x="338" y="88" width="26" height="9" rx="2.5"/>
+    <rect x="370" y="88" width="26" height="9" rx="2.5"/>
+  </g>
+
+  <!-- Pitch, cropped by the frame so the touchline curves out of shot. -->
+  <ellipse cx="200" cy="215" rx="272" ry="108" fill="url(#pitch)"/>
+  <g fill="none" stroke="#eaf5ee" stroke-width="2" opacity=".45">
+    <ellipse cx="200" cy="215" rx="228" ry="88"/>
+    <circle cx="200" cy="215" r="42"/>
+    <line x1="200" y1="127" x2="200" y2="225"/>
+  </g>
+</svg>

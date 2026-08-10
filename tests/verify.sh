@@ -68,7 +68,7 @@ USE booking;
 DELETE FROM bookings;
 ALTER TABLE bookings AUTO_INCREMENT = 1;
 INSERT INTO bookings (uid, mid, seat_tier, paid_amount) VALUES
-    (2, 1, 'vip', 100.00), (3, 1, 'gold', 35.00), (2, 3, 'platinum', 65.00);
+    (2, 1, 'vip', 295.00), (3, 1, 'gold', 55.00), (2, 3, 'platinum', 85.00);
 " >/dev/null 2>&1
 
 head_ "Access control (finding #1, #4)"
@@ -98,7 +98,7 @@ csrf_rows=$(curl -s -b "$JAR_DIR/user.jar" -X POST "$BASE/booking.php" \
 expect_eq "a refused POST is inert" 403 "$csrf_rows"
 
 head_ "Seat counting is scoped to the match (finding #7)"
-# Riverside Park seats 2 VIP; match 2 is played there, match 1 is not.
+# Anfield releases 2 VIP seats; match 2 is played there, match 1 is not.
 before_m2=$(remaining user 2 vip)
 before_m1=$(remaining user 1 vip)
 book user 2 vip >/dev/null
@@ -117,7 +117,7 @@ else
 fi
 
 head_ "Capacity is enforced (finding #8)"
-# One VIP seat is left at Riverside Park. A second user takes it; a third is
+# One VIP seat is left at Anfield. A second user takes it; a third is
 # refused. The UNIQUE constraint stops the same user buying the tier twice, so
 # this needs distinct accounts.
 login sam    sam@example.com    'Passw0rd!23'

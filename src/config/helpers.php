@@ -114,3 +114,46 @@ function money(float|string|null $amount): string
 {
     return number_format((float) $amount, 2);
 }
+
+/**
+ * Resolve an asset path stored in teams.photo / stadium.photo to a URL.
+ *
+ * Those two columns existed in the recovered schema and were never populated;
+ * the original hardcoded one team's image onto every fixture card instead. The
+ * seed fills them now, but the admin panel creates teams and grounds without
+ * artwork, so a missing or bogus value has to degrade rather than 404.
+ *
+ * The file_exists() check is what makes that work, and it is also why the
+ * value is treated as untrusted: it reaches here from a database column an
+ * admin can write, so basename() strips any traversal before it is used.
+ */
+function asset_image(?string $stored, string $fallback = 'assets/img/placeholder.svg'): string
+{
+    if ($stored === null || $stored === '') {
+        return url($fallback);
+    }
+
+    $parts = array_map('basename', array_slice(explode('/', $stored), -2));
+    $path  = 'assets/img/' . implode('/', $parts);
+
+    return file_exists(__DIR__ . '/../public/' . $path) ? url($path) : url($fallback);
+}
+
+/**
+ * How an availability count should be presented.
+ *
+ * Returns the pill modifier and the label. The label always states the
+ * situation in words — "Sold out", "3 left" — because colour on its own is
+ * not information to anyone who cannot distinguish these two greens.
+ */
+function seat_status(int $remaining, int $capacity): array
+{
+    if ($remaining === 0) {
+        return ['none', 'Sold out'];
+    }
+    // Below a fifth of the allocation, or in single figures, counts as scarce.
+    if ($capacity > 0 && ($remaining <= 9 || $remaining / $capacity <= 0.2)) {
+        return ['low', $remaining . ' left'];
+    }
+    return ['ok', $remaining . ' left'];
+}

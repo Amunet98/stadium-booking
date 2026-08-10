@@ -13,6 +13,26 @@ require_once __DIR__ . '/../config/csrf.php';
  * concatenation after passing values through a hand-rolled sanitize().
  */
 
+/**
+ * Row counts for the dashboard tiles.
+ *
+ * Four COUNT(*) queries rather than one UNION: each is an index-only count on
+ * a small table, and keeping them separate means adding a tile does not mean
+ * re-reading a hand-assembled result set.
+ */
+function admin_counts(PDO $pdo): array
+{
+    $counts = [];
+    foreach (['matches', 'teams', 'stadium', 'bookings'] as $table) {
+        // The table names are literals from this list, never user input — the
+        // one place in the codebase where a table name is interpolated.
+        $counts[$table] = (int) $pdo->query("SELECT COUNT(*) FROM {$table}")->fetchColumn();
+    }
+    $counts['stadiums'] = $counts['stadium'];
+
+    return $counts;
+}
+
 function admin_handle_post(string $page): array
 {
     return match ($page) {
@@ -78,7 +98,7 @@ function admin_list_stadiums(): void
     )->fetchAll();
     ?>
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h5 mb-0">Stadiums</h1>
+        <h2 class="h5 mb-0">Stadiums</h2>
         <a class="btn btn-primary btn-sm" href="<?= url('admin.php?page=stadiums&action=add') ?>">Add stadium</a>
     </div>
     <div class="table-responsive">
@@ -103,7 +123,12 @@ function admin_list_stadiums(): void
                 </tr>
             <?php endforeach; ?>
             <?php if (!$rows): ?>
-                <tr><td colspan="5" class="text-muted">No stadiums yet.</td></tr>
+                <tr>
+                    <td colspan="5" class="py-4 text-center">
+                        <p class="text-muted mb-2">No grounds yet.</p>
+                            <a class="btn btn-primary btn-sm" href="<?= url('admin.php?page=stadiums&action=add') ?>">Add the first ground</a>
+                    </td>
+                </tr>
             <?php endif; ?>
             </tbody>
         </table>
@@ -114,8 +139,8 @@ function admin_list_stadiums(): void
 function admin_stadium_form(): void
 {
     ?>
-    <h1 class="h5 mb-3">Add stadium</h1>
-    <form method="post" action="<?= url('admin.php?page=stadiums') ?>" class="card card-body">
+    <h2 class="h5 mb-3">Add stadium</h2>
+    <form method="post" action="<?= url('admin.php?page=stadiums') ?>" class="mt-1">
         <?= csrf_field() ?>
         <div class="mb-3">
             <label class="form-label" for="name">Name</label>
@@ -138,7 +163,7 @@ function admin_stadium_form(): void
         </div>
         <div>
             <button class="btn btn-primary" type="submit">Add stadium</button>
-            <a class="btn btn-link" href="<?= url('admin.php?page=stadiums') ?>">Cancel</a>
+            <a class="btn btn-ghost" href="<?= url('admin.php?page=stadiums') ?>">Cancel</a>
         </div>
     </form>
     <?php
@@ -179,7 +204,7 @@ function admin_list_teams(): void
     )->fetchAll();
     ?>
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h5 mb-0">Teams</h1>
+        <h2 class="h5 mb-0">Teams</h2>
         <a class="btn btn-primary btn-sm" href="<?= url('admin.php?page=teams&action=add') ?>">Add team</a>
     </div>
     <div class="table-responsive">
@@ -202,7 +227,12 @@ function admin_list_teams(): void
                 </tr>
             <?php endforeach; ?>
             <?php if (!$rows): ?>
-                <tr><td colspan="4" class="text-muted">No teams yet.</td></tr>
+                <tr>
+                    <td colspan="4" class="py-4 text-center">
+                        <p class="text-muted mb-2">No clubs yet.</p>
+                            <a class="btn btn-primary btn-sm" href="<?= url('admin.php?page=teams&action=add') ?>">Add the first club</a>
+                    </td>
+                </tr>
             <?php endif; ?>
             </tbody>
         </table>
@@ -214,8 +244,8 @@ function admin_team_form(): void
 {
     $stadiums = db()->query('SELECT sid, name FROM stadium ORDER BY name')->fetchAll();
     ?>
-    <h1 class="h5 mb-3">Add team</h1>
-    <form method="post" action="<?= url('admin.php?page=teams') ?>" class="card card-body">
+    <h2 class="h5 mb-3">Add team</h2>
+    <form method="post" action="<?= url('admin.php?page=teams') ?>" class="mt-1">
         <?= csrf_field() ?>
         <div class="mb-3">
             <label class="form-label" for="name">Team name</label>
@@ -240,7 +270,7 @@ function admin_team_form(): void
         </div>
         <div>
             <button class="btn btn-primary" type="submit">Add team</button>
-            <a class="btn btn-link" href="<?= url('admin.php?page=teams') ?>">Cancel</a>
+            <a class="btn btn-ghost" href="<?= url('admin.php?page=teams') ?>">Cancel</a>
         </div>
     </form>
     <?php
@@ -315,7 +345,7 @@ function admin_list_matches(): void
     )->fetchAll();
     ?>
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h5 mb-0">Matches</h1>
+        <h2 class="h5 mb-0">Matches</h2>
         <a class="btn btn-primary btn-sm" href="<?= url('admin.php?page=matches&action=add') ?>">Add match</a>
     </div>
     <div class="table-responsive">
@@ -350,7 +380,12 @@ function admin_list_matches(): void
                 </tr>
             <?php endforeach; ?>
             <?php if (!$rows): ?>
-                <tr><td colspan="7" class="text-muted">No matches yet.</td></tr>
+                <tr>
+                    <td colspan="7" class="py-4 text-center">
+                        <p class="text-muted mb-2">No fixtures yet.</p>
+                            <a class="btn btn-primary btn-sm" href="<?= url('admin.php?page=matches&action=add') ?>">Add the first fixture</a>
+                    </td>
+                </tr>
             <?php endif; ?>
             </tbody>
         </table>
@@ -364,7 +399,7 @@ function admin_match_form(): void
     $stadiums = $pdo->query('SELECT sid, name FROM stadium ORDER BY name')->fetchAll();
     $teams    = $pdo->query('SELECT tid, name FROM teams ORDER BY name')->fetchAll();
     ?>
-    <h1 class="h5 mb-3">Add match</h1>
+    <h2 class="h5 mb-3">Add match</h2>
 
     <?php if (!$stadiums || !$teams): ?>
         <div class="alert alert-warning">
@@ -372,7 +407,7 @@ function admin_match_form(): void
         </div>
     <?php endif; ?>
 
-    <form method="post" action="<?= url('admin.php?page=matches') ?>" class="card card-body">
+    <form method="post" action="<?= url('admin.php?page=matches') ?>" class="mt-1">
         <?= csrf_field() ?>
         <div class="mb-3">
             <label class="form-label" for="title">Title</label>
@@ -438,7 +473,7 @@ function admin_match_form(): void
         </div>
         <div>
             <button class="btn btn-primary" type="submit">Add match</button>
-            <a class="btn btn-link" href="<?= url('admin.php?page=matches') ?>">Cancel</a>
+            <a class="btn btn-ghost" href="<?= url('admin.php?page=matches') ?>">Cancel</a>
         </div>
     </form>
     <?php
@@ -472,7 +507,7 @@ function admin_list_bookings(): void
     $revenue = array_sum(array_column($rows, 'paid_amount'));
     ?>
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="h5 mb-0">Bookings</h1>
+        <h2 class="h5 mb-0">Bookings</h2>
         <span class="text-muted small">
             <?= count($rows) ?> booking<?= count($rows) === 1 ? '' : 's' ?>
             &middot; &pound;<?= e(money($revenue)) ?> recorded
@@ -508,7 +543,11 @@ function admin_list_bookings(): void
                 </tr>
             <?php endforeach; ?>
             <?php if (!$rows): ?>
-                <tr><td colspan="6" class="text-muted">No bookings yet.</td></tr>
+                <tr>
+                    <td colspan="6" class="py-4 text-center">
+                        <p class="text-muted mb-2">No bookings yet.</p>
+                    </td>
+                </tr>
             <?php endif; ?>
             </tbody>
         </table>

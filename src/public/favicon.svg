@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Stadium Booking">
+  <rect width="32" height="32" rx="7" fill="#0b6b46"/>
+  <g fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 13.5V11a1.5 1.5 0 0 1 1.5-1.5h17A1.5 1.5 0 0 1 26 11v2.5a2.5 2.5 0 0 0 0 5V21a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 6 21v-2.5a2.5 2.5 0 0 0 0-5z"/>
+    <path d="M19 10v2M19 15v2M19 20v2"/>
+  </g>
+</svg>
