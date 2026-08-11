@@ -10,8 +10,14 @@
 # point of the project. The schema also relies on CHECK constraints actually
 # being enforced.
 #
-# Aiven's free MySQL plan is real MySQL 8 and does not expire. Create one, then
-# set the DB_* variables below on the service.
+# Aiven's free MySQL plan is real MySQL 8. Create one, then set the DB_*
+# variables below on the service.
+#
+# Do not read "free plan" as "permanent": the first one vanished overnight on
+# 2026-08-11 — the hostname stopped resolving, which is what Aiven does when a
+# service is powered off or deleted. If the demo goes dark, check that the
+# database is still there before looking anywhere else. README.md lists the
+# three places the connection details have to be re-pointed.
 #
 # The container initialises its own schema on first boot (docker-entrypoint.sh
 # runs db/bootstrap.php, which is a no-op once the tables exist), so there is no
@@ -30,7 +36,12 @@ services:
     # Ohio and Virginia — there is no California). Same coast, ~20ms.
     # Moving a Render service between regions means recreating it.
     region: oregon
-    healthCheckPath: /index.php
+    # Not /index.php. That page calls db() before it renders anything, so when
+    # the demo database went away the health check failed forever, the service
+    # never went live, and requests hung without a status instead of showing an
+    # error. /health.php answers 200 whenever PHP is serving and reports the
+    # database separately.
+    healthCheckPath: /health.php
     envVars:
       # Render terminates TLS at its load balancer and forwards plain HTTP, so
       # without this the app emits http:// links on an https:// site and drops

@@ -40,6 +40,27 @@ jobs:
           php-version: "8.2"
           extensions: pdo_mysql
 
+      - name: Check the database is reachable
+        if: steps.check.outputs.configured == 'true'
+        env:
+          DB_HOST: ${{ secrets.DEMO_DB_HOST }}
+          DB_PORT: ${{ secrets.DEMO_DB_PORT }}
+        run: |
+          # Without this, a missing database surfaces as
+          # "getaddrinfo for *** failed" from inside bootstrap.php, with the
+          # host masked and the line buried in step debug output. It took a
+          # dig against 1.1.1.1 to work out that the Aiven service was simply
+          # gone. Say so here instead.
+          if ! getent hosts "$DB_HOST" > /dev/null; then
+            echo "::error::The demo database hostname does not resolve. Aiven removes the DNS record when a service is powered off or deleted — check the Aiven console before anything else, then re-point the secrets as README.md describes."
+            exit 1
+          fi
+          if ! timeout 10 bash -c "cat < /dev/null > /dev/tcp/$DB_HOST/$DB_PORT" 2>/dev/null; then
+            echo "::error::The demo database resolves but refuses connections on its port. It is either still starting, or the IP allowlist no longer admits GitHub's runners."
+            exit 1
+          fi
+          echo "database host resolves and accepts connections"
+
       - name: Reset schema and seed data
         if: steps.check.outputs.configured == 'true'
         env:
