@@ -1,0 +1,85 @@
+name: Keep the demo database awake
+
+# Aiven powers a free service down when nothing connects to it, and the demo
+# cannot recover on its own: the DNS record is withdrawn with the service, so a
+# connection attempt cannot wake it — someone has to press Power on in the
+# console. Measured on this project's own service (project event log):
+#
+#   10 Aug 2026 16:27 UTC  last connection (a manual demo-reset run)
+#   10 Aug 2026 23:34 UTC  "Powered down the unused free service" — Aiven Automation
+#
+# About seven hours. demo-reset.yml runs once a day, which is nowhere near
+# often enough to count as use, so without this the demo is dark for most of
+# every day. This opens one connection every four hours to stay inside the
+# threshold with room to spare.
+#
+# The cost objection that keeps demo-reset.yml down to once a day does not
+# apply here: this connects straight to Aiven and never touches the Render
+# service, so it spends no instance hours from the free 750/month pool.
+#
+# Runs only when DEMO_DB_HOST is configured, so it is inert on a fork.
+
+on:
+  schedule:
+    # Four-hourly, offset off 02:00 so it does not collide with the reset job.
+    - cron: "0 1,5,9,13,17,21 * * *"
+  workflow_dispatch:
+
+# A run takes ~20 seconds; overlapping runs would only mean overlapping
+# connections, but there is no reason to queue them up.
+concurrency:
+  group: demo-keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip if the demo is not configured
+        id: check
+        run: |
+          if [ -z "${{ secrets.DEMO_DB_HOST }}" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "DEMO_DB_HOST is not set — nothing to keep awake."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up PHP
+        if: steps.check.outputs.configured == 'true'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: pdo_mysql
+
+      - name: Open a connection
+        if: steps.check.outputs.configured == 'true'
+        env:
+          DB_HOST: ${{ secrets.DEMO_DB_HOST }}
+          DB_PORT: ${{ secrets.DEMO_DB_PORT }}
+          DB_NAME: ${{ secrets.DEMO_DB_NAME }}
+          DB_USER: ${{ secrets.DEMO_DB_USER }}
+          DB_PASSWORD: ${{ secrets.DEMO_DB_PASSWORD }}
+          DB_SSL_CA: ${{ github.workspace }}/ca.pem
+        run: |
+          printf '%s' "${{ secrets.DEMO_DB_SSL_CA }}" > "$GITHUB_WORKSPACE/ca.pem"
+
+          # Resolve first, for the same reason demo-reset.yml does: a powered-off
+          # service surfaces as a masked getaddrinfo error that reads like a
+          # network fault. If this branch is ever taken, the keep-alive did not
+          # do its job and the service needs a manual power on.
+          if ! getent hosts "$DB_HOST" > /dev/null; then
+            echo "::error::The demo database hostname does not resolve — Aiven has powered the service down despite the keep-alive. Press Power on in the Aiven console, then check the project event log for the reason and shorten this schedule if it says 'unused'."
+            exit 1
+          fi
+
+          # Through src/config/db.php rather than a raw DSN, so the connection
+          # is made exactly the way the application makes it — same TLS
+          # settings, same CA verification.
+          php -r '
+            require "src/config/db.php";
+            $v = db()->query("SELECT VERSION()")->fetchColumn();
+            echo "connected to MySQL $v — service kept awake\n";
+          '

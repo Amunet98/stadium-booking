@@ -81,9 +81,15 @@ MySQL-compatible service: the booking transaction locks with
 `SELECT ... FOR UPDATE OF m`, which is 8.0.1+ syntax that TiDB- and
 Vitess-backed offerings do not reliably support — and that lock is the point of
 the project. Render has no MySQL at all, so use something like Aiven's free
-MySQL plan and keep it outside the Render workspace. Expect to replace it: free
-managed databases do not last, and this one's first host stopped resolving
-eleven hours after it was set up.
+MySQL plan and keep it outside the Render workspace.
+
+Budget for the free plan powering itself off. Aiven reclaims a free service
+that nothing connects to — measured here, about seven idle hours — and it does
+not come back by itself, because the DNS record is withdrawn along with the
+service, so a connection attempt cannot wake it. Someone has to press Power on
+in the console. `.github/workflows/demo-keepalive.yml` opens a connection every
+four hours to stay under that threshold; it talks to the database directly and
+never wakes the Render service, so it costs no instance hours.
 
 **2. Create the Render service** from this repo. `render.yaml` sets
 `TRUST_PROXY=1` and `APP_ENV=production` already; fill in `DB_HOST`, `DB_PORT`,
@@ -111,12 +117,22 @@ php db/bootstrap.php --force  # drop and recreate
 **When the demo goes dark,** suspect the database first — it is the part with no
 paid guarantee behind it. `curl https://<demo>/health.php` answers `200` whenever
 the container is serving and prints `db: ok` or `db: unavailable`, which
-separates a sleeping web service from a missing database. The reset workflow
-checks the same thing before it tries to seed and fails with a sentence saying
-so. If the database really is gone, recreating it means re-pointing the
-connection details in three places, all of which must agree: the `DEMO_DB_*`
+separates a sleeping web service from a missing database. Both scheduled
+workflows check the host resolves before doing anything and fail with a sentence
+saying what it means.
+
+If it is the database, the Aiven console's project **Event log** says why in one
+line — `Powered down the unused free service` is the expected one, and means
+pressing Power on is the whole fix, with every stored credential still valid.
+Only if the service was *deleted* do the connection details change, and then
+they have to be re-pointed in three places that must agree: the `DEMO_DB_*`
 GitHub secrets, the `DB_*` variables and the `ca.pem` Secret File on the Render
 service, and your local `.env.aiven` plus `ca.pem`.
+
+One trap while recovering: a resolver that cached the `NXDOMAIN` will keep
+reporting the host as missing for minutes after the service is back. Check with
+`dig +short <host> @1.1.1.1` rather than `getent hosts`, which serves the stale
+answer.
 </details>
 
 ---
