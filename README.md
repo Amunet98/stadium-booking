@@ -320,7 +320,26 @@ is never updated, `ON UPDATE CASCADE` bought nothing there, so the FKs became
 | Interface | one page listing fixtures | landing page, filterable listing, ticket stubs |
 | Fixture art | one PNG on every card | per-club badges and per-ground artwork |
 | Keyboard | no skip link, no focus rings on buttons | skip link, AA-checked focus ring everywhere |
+| Redirects | `Location:` built from the client's `Host` header | a path, which cannot leave the origin |
+| Login attempts | unlimited | throttled per email and per IP |
 | Runs on | Windows + XAMPP only | anywhere with Docker |
+
+The last two rows are from a 2026 re-audit of the *rebuild*, not of the 2021
+code, and are worth stating plainly: restoring a project does not make it
+finished. `url()` fell back to the client-supplied `Host` header whenever
+`APP_BASE_URL` was unset — and it was unset on the deployed service, existing
+only as a commented-out line in `.env.example` — so every redirect echoed
+whatever host was asked for:
+
+```
+$ curl -sD - -H 'Host: evil.example' .../booking.php
+Location: http://evil.example/login.php
+```
+
+`redirect()` now emits a path. A relative `Location` is resolved against the
+current request, so it cannot leave the origin whatever the header says, and
+unlike a configuration fix it cannot be forgotten on the next deploy. Finding
+#16 in the findings document carries the full write-up.
 
 ### The interface
 
@@ -402,8 +421,17 @@ this one: a measurable before and after.
 ## Not included
 
 No payment gateway — `paid_amount` records what a ticket cost, nothing takes
-money. No cancellations, no email delivery, no rate limiting on login. These are
-listed in the findings document rather than quietly implied.
+money. No cancellations and no email delivery. These are listed in the findings
+document rather than quietly implied.
+
+Login throttling *was* on that list and no longer is: bcrypt makes each guess
+expensive for the server rather than for the attacker, so the form was happy to
+be asked forever. Failed attempts are now counted per email (10) and per IP (60)
+over a rolling 15 minutes. The per-IP figure is deliberately loose — an IP is
+not a person, and a tight cap mostly punishes whoever shares a NAT with the
+person guessing — and a success clears both, so proving you hold an account
+redeems your address. There is no lockout to sit out, which matters for a demo
+whose credentials are printed on the login page.
 
 ## Credits
 
