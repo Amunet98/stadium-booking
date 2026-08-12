@@ -11,6 +11,7 @@
 SET NAMES utf8mb4;
 SET time_zone = '+00:00';
 
+DROP TABLE IF EXISTS login_attempts;
 DROP TABLE IF EXISTS bookings;
 DROP TABLE IF EXISTS matches;
 DROP TABLE IF EXISTS teams;
@@ -173,4 +174,32 @@ CREATE TABLE bookings (
         CHECK (seat_tier IN ('vip', 'platinum', 'gold')),
     CONSTRAINT chk_bookings_paid_amount                           -- [NEW]
         CHECK (paid_amount >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- login_attempts                                                        [NEW]
+--
+-- Failed logins only, so the table stays small and successful traffic never
+-- touches it on the write path. The original had no throttling at all, which
+-- docs/SECURITY-FINDINGS.md recorded as accepted — with bcrypt and a single
+-- shared demo account that is survivable, but it leaves the login form as the
+-- one place an attacker can guess without limit.
+--
+-- Rows are counted two ways (see login_throttle_check): per email, so one
+-- account cannot be ground down, and per IP, so an attacker cannot sidestep
+-- that by spreading guesses across many addresses.
+--
+-- No foreign key to users: an attempt against an address that does not exist
+-- is exactly the thing worth counting, and the login form deliberately cannot
+-- tell the two cases apart.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    ip           VARBINARY(16)   NULL,           -- inet_pton form; NULL if unparseable
+    email        VARCHAR(190)    NOT NULL,
+    attempted_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_login_attempts_email (email, attempted_at),
+    KEY idx_login_attempts_ip (ip, attempted_at),
+    KEY idx_login_attempts_time (attempted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

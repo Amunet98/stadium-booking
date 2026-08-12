@@ -29,12 +29,35 @@ function e(?string $value): string
 function url(string $path = ''): string
 {
     $base = rtrim(getenv('APP_BASE_URL') ?: '', '/');
+    // Render injects the service's real external URL. Preferring it over the
+    // request's Host header means a deployment is correct without anyone
+    // having to remember APP_BASE_URL — which is exactly what was forgotten.
+    if ($base === '') {
+        $base = rtrim(getenv('RENDER_EXTERNAL_URL') ?: '', '/');
+    }
     if ($base === '') {
         $scheme = request_is_https() ? 'https' : 'http';
+        // Client-supplied and trivially spoofed. It is used only as a
+        // last-resort fallback for local development, where the alternative is
+        // hardcoding localhost again; redirect() no longer depends on it at
+        // all, so a forged Host can no longer steer anyone off-site.
         $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $base   = $scheme . '://' . $host;
     }
     return $base . '/' . ltrim($path, '/');
+}
+
+/**
+ * Path-only form of url(), for Location headers.
+ *
+ * Keeps the base path when APP_BASE_URL points at a subdirectory, but never
+ * carries a scheme or host.
+ */
+function url_path(string $path = ''): string
+{
+    $base = getenv('APP_BASE_URL') ?: '';
+    $prefix = $base !== '' ? rtrim((string) parse_url($base, PHP_URL_PATH), '/') : '';
+    return $prefix . '/' . ltrim($path, '/');
 }
 
 /**
@@ -63,9 +86,24 @@ function request_is_https(): bool
     return strtolower(trim(explode(',', $proto)[0])) === 'https';
 }
 
+/**
+ * Redirect within the application.
+ *
+ * Emits a path, not an absolute URL, and that is the security-relevant part.
+ * url() falls back to $_SERVER['HTTP_HOST'] when no base is configured, and
+ * APP_BASE_URL was never set on the deployed service — only commented out in
+ * .env.example. So `redirect('login.php')` sent
+ * `Location: http://<whatever-host-the-client-sent>/login.php`, a working open
+ * redirect on every redirect in the app.
+ *
+ * A relative Location is explicitly allowed (RFC 7231 §7.1.2) and resolved by
+ * the browser against the current request, so it cannot be steered off-origin
+ * no matter what the Host header says — and it stays correct without depending
+ * on any environment variable being remembered.
+ */
 function redirect(string $path): never
 {
-    header('Location: ' . url($path));
+    header('Location: ' . url_path($path));
     exit;
 }
 

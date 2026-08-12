@@ -19,18 +19,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email    = trim((string) ($_POST['email'] ?? ''));
     $password = (string) ($_POST['password'] ?? '');
 
-    $stmt = db()->prepare('SELECT uid, name, email, password, rid FROM users WHERE email = ?');
-    $stmt->execute([$email]);
-    $user = $stmt->fetch();
+    // Checked before the password is, so a throttled attacker cannot keep
+    // spending server time on bcrypt. See login_throttle_check().
+    if (!login_throttle_check($email)) {
+        // 429 rather than a plain re-render: the status is the honest one, and
+        // it keeps the response meaningful to anything that is not a browser.
+        http_response_code(429);
+        $error = 'Too many failed attempts. Wait a few minutes and try again.';
+    } else {
+        $stmt = db()->prepare('SELECT uid, name, email, password, rid FROM users WHERE email = ?');
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
 
-    // One message for "no such account" and "wrong password" alike: distinct
-    // messages let an attacker enumerate which addresses are registered. The
-    // original printed "no user found" for the former.
-    if ($user && verify_and_upgrade_password($user, $password)) {
-        log_in_user($user);
-        redirect((int) $user['rid'] === ROLE_ADMIN ? 'admin.php' : 'index.php');
+        // One message for "no such account" and "wrong password" alike: distinct
+        // messages let an attacker enumerate which addresses are registered. The
+        // original printed "no user found" for the former.
+        if ($user && verify_and_upgrade_password($user, $password)) {
+            login_attempt_succeeded($email);
+            log_in_user($user);
+            redirect((int) $user['rid'] === ROLE_ADMIN ? 'admin.php' : 'index.php');
+        }
+        login_attempt_failed($email);
+        $error = 'Those credentials do not match an account.';
     }
-    $error = 'Those credentials do not match an account.';
 }
 
 $isDemo = (getenv('APP_ENV') ?: 'development') !== 'production';

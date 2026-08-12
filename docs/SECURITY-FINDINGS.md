@@ -316,6 +316,33 @@ machine.
 **Fixed**: a `url()` helper deriving the base from the request, overridable via
 `APP_BASE_URL`.
 
+**Amended (2026-08-13).** "Overridable via `APP_BASE_URL`" undersold the risk:
+with it *unset* — which is how the service was actually deployed, the variable
+being only a commented-out line in `.env.example` — the base came from
+`$_SERVER['HTTP_HOST']`, which the client supplies. Every `redirect()` therefore
+echoed whatever host was asked for:
+
+```
+$ curl -sD - -H 'Host: evil.example' http://localhost:8080/booking.php
+Location: http://evil.example/login.php
+```
+
+A working open redirect on every redirect in the app. Impact was limited — there
+is no password-reset flow to poison — but it is exactly the primitive a
+phishing link wants.
+
+Three changes, in order of how much they matter:
+
+1. `redirect()` emits a **path**, not an absolute URL. A relative `Location` is
+   explicitly allowed (RFC 7231 §7.1.2) and is resolved against the current
+   request, so it cannot leave the origin no matter what any header says. This
+   is the fix that does not depend on anyone remembering configuration.
+2. `url()` prefers Render's injected `RENDER_EXTERNAL_URL` before falling back
+   to the Host header, so a deploy is correct by default.
+3. `APP_BASE_URL` is now actually set in `render.yaml`.
+
+`tests/verify.sh` covers it.
+
 ## 17. Malformed HTML on every page — Low
 
 `legacy/footer.php` ends:
@@ -385,5 +412,15 @@ session, which is the only trustworthy source for it anyway.
   booking. Nothing takes money. Adding a gateway is out of scope for a
   restoration, and claiming otherwise on a CV would not survive one question.
 - **No cancellation or refunds.** Bookings are create-and-read only.
-- **No rate limiting on login.** Worth having before any real deployment.
+- ~~**No rate limiting on login.**~~ **Addressed 2026-08-13.** It was the one
+  item on this list worth closing rather than accepting: bcrypt makes a guess
+  expensive for the server, not for the attacker, so the form was happy to be
+  asked forever. Failed attempts are now recorded in `login_attempts` and
+  counted two ways — 10 per email and 60 per IP in a rolling 15 minutes. The
+  per-IP figure is deliberately loose, because an IP is not a person and a
+  tight cap mostly punishes whoever shares a NAT with the attacker; the
+  per-email limit is what protects an account. A success clears both, so
+  proving you hold an account redeems your address. There is no lockout to sit
+  out, which matters for a public demo whose credentials are printed on the
+  login page. Covered by `tests/verify.sh`.
 - **No email delivery.** Confirmations are shown on screen and not sent.

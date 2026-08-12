@@ -101,6 +101,40 @@ function sql_statements(string $sql): array
     return $statements;
 }
 
+/**
+ * Additive, re-runnable schema changes.
+ *
+ * schema.sql leads with DROP TABLE, so it is only ever applied to an empty or
+ * deliberately reset database. A table added to it therefore never reaches the
+ * live database, whose tables already exist and are not going to be dropped.
+ * Statements listed here run on every boot instead, and must each be a no-op
+ * when the change is already in place.
+ */
+function ensure_additive_schema(PDO $pdo): int
+{
+    $statements = [
+        // Login throttling (see src/config/auth.php). Kept in step with the
+        // matching CREATE TABLE at the end of schema.sql.
+        'CREATE TABLE IF NOT EXISTS login_attempts (
+            id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            ip           VARBINARY(16)   NULL,
+            email        VARCHAR(190)    NOT NULL,
+            attempted_at TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_login_attempts_email (email, attempted_at),
+            KEY idx_login_attempts_ip (ip, attempted_at),
+            KEY idx_login_attempts_time (attempted_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+    ];
+
+    $applied = 0;
+    foreach ($statements as $statement) {
+        $pdo->exec($statement);
+        $applied++;
+    }
+    return $applied;
+}
+
 function run_file(PDO $pdo, string $path): int
 {
     $sql = file_get_contents($path);
@@ -127,7 +161,12 @@ try {
     $alreadySetUp = (int) $stmt->fetchColumn() > 0;
 
     if ($alreadySetUp && !$force) {
-        fwrite(STDOUT, "bootstrap: schema already present, nothing to do\n");
+        // Additive changes still have to reach a database that already has the
+        // original tables, because this path is otherwise a no-op and the
+        // deployed database is never dropped. Anything here must be written so
+        // that running it twice is harmless.
+        $ensured = ensure_additive_schema($pdo);
+        fwrite(STDOUT, "bootstrap: schema already present ({$ensured} additive statements applied)\n");
         exit(0);
     }
 

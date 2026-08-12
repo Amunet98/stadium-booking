@@ -53,6 +53,13 @@ services:
       - key: APP_ENV
         value: production
 
+      # Pins the scheme+host used to build absolute links. Without it url()
+      # falls back to the client-supplied Host header — which was a working
+      # open redirect until redirect() stopped emitting absolute URLs. Belt
+      # and braces: this also keeps canonical links correct.
+      - key: APP_BASE_URL
+        value: https://stadium-booking-75sm.onrender.com
+
       # Aiven connection details — set these in the dashboard, not here.
       - key: DB_HOST
         sync: false

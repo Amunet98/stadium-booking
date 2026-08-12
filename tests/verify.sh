@@ -160,5 +160,50 @@ else
     bad "a legacy seat value was accepted: ${bad_tier:-<no error>}"
 fi
 
+head_ "Redirects cannot be steered by the Host header"
+# url() falls back to $_SERVER['HTTP_HOST'] when APP_BASE_URL is unset, and it
+# was unset on the deployed service — so every redirect echoed whatever host
+# the client claimed. redirect() emits a path now, which cannot leave the
+# origin whatever the header says.
+loc=$(curl -s -D - -o /dev/null -H 'Host: evil.example' "$BASE/booking.php" | grep -i '^location:' | tr -d '\r')
+if echo "$loc" | grep -qi 'evil.example'; then
+    bad "a forged Host reached the Location header: $loc"
+else
+    ok "a forged Host does not reach the Location header (${loc:-no redirect})"
+fi
+
+head_ "Login throttling"
+# Only failures are counted, so this must not disturb the accounts the earlier
+# sections logged in with. A throwaway address keeps it isolated.
+throttle_jar="$JAR_DIR/throttle.txt"
+curl -s -c "$throttle_jar" "$BASE/login.php" -o "$JAR_DIR/throttle.html"
+throttle_token=$(csrf_of "$JAR_DIR/throttle.html")
+throttle_email="throttle-probe@example.com"
+last=""
+for i in $(seq 1 11); do
+    last=$(curl -s -b "$throttle_jar" -o /dev/null -w '%{http_code}' \
+        -X POST "$BASE/login.php" \
+        -d "_csrf=$throttle_token" -d "email=$throttle_email" -d "password=wrong$i")
+done
+expect_eq "the 11th failed login in a row is refused with 429" 429 "$last"
+
+# And a legitimate user is not collateral damage: a correct password still
+# works, and clears the record behind it.
+mysql_root "DELETE FROM booking.login_attempts WHERE email='admin@example.com';" >/dev/null 2>&1
+for i in 1 2 3; do
+    curl -s -b "$throttle_jar" -o /dev/null \
+        -X POST "$BASE/login.php" \
+        -d "_csrf=$throttle_token" -d "email=admin@example.com" -d "password=wrong$i"
+done
+good_jar="$JAR_DIR/throttle-good.txt"
+curl -s -c "$good_jar" "$BASE/login.php" -o "$JAR_DIR/throttle-good.html"
+good_token=$(csrf_of "$JAR_DIR/throttle-good.html")
+good=$(curl -s -b "$good_jar" -c "$good_jar" -o /dev/null -w '%{http_code}' \
+    -X POST "$BASE/login.php" \
+    -d "_csrf=$good_token" -d "email=admin@example.com" -d "password=Admin!2345")
+expect_eq "a correct password still logs in after a few failures" 302 "$good"
+cleared=$(mysql_root "SELECT COUNT(*) FROM booking.login_attempts WHERE email='admin@example.com';" 2>/dev/null | tail -1)
+expect_eq "a successful login clears that address's failures" 0 "$cleared"
+
 printf '\n\033[1m%d passed, %d failed\033[0m\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]

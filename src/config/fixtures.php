@@ -55,7 +55,9 @@ function fetch_fixtures(PDO $pdo, array $filters = []): array
     $stmt->execute($params);
     $rows = $stmt->fetchAll();
 
-    $remaining = seats_remaining_many($pdo);
+    // Scoped to the fixtures this page actually renders, so the grouped count
+    // no longer reads the whole bookings table on every load.
+    $remaining = seats_remaining_many($pdo, array_column($rows, 'mid'));
     $out = [];
 
     foreach ($rows as $row) {

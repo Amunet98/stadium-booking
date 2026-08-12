@@ -23,20 +23,44 @@ function start_session(): void
     session_start();
 }
 
+/**
+ * The signed-in user, or null.
+ *
+ * Cached per request because is_logged_in(), is_admin() and require_admin()
+ * all call it and a page can ask several times.
+ *
+ * The cache now remembers a *miss*. `static $user = null` could not tell "not
+ * looked up yet" from "looked up, found nothing", so a session holding a uid
+ * for a deleted user re-ran the query on every single call.
+ *
+ * It is also keyed by uid rather than being a bare flag, so it cannot outlive
+ * a change of session identity inside one request — logging in as someone
+ * else is the case that matters. (Logging *out* was already safe: log_out()
+ * empties $_SESSION, and the check above returns null before the cache is
+ * ever consulted.)
+ */
 function current_user(): ?array
 {
     start_session();
     if (empty($_SESSION['uid'])) {
         return null;
     }
+
+    static $cachedUid = null;
     static $user = null;
-    if ($user === null) {
-        $stmt = db()->prepare(
-            'SELECT uid, name, email, rid FROM users WHERE uid = ?'
-        );
-        $stmt->execute([$_SESSION['uid']]);
-        $user = $stmt->fetch() ?: null;
+
+    $uid = $_SESSION['uid'];
+    if ($cachedUid === $uid) {
+        return $user;
     }
+
+    $stmt = db()->prepare(
+        'SELECT uid, name, email, rid FROM users WHERE uid = ?'
+    );
+    $stmt->execute([$uid]);
+    $user = $stmt->fetch() ?: null;
+    $cachedUid = $uid;
+
     return $user;
 }
 
@@ -116,6 +140,136 @@ function verify_and_upgrade_password(array $user, string $password): bool
         $stmt->execute([password_hash($password, PASSWORD_BCRYPT), $user['uid']]);
     }
     return true;
+}
+
+/**
+ * Login throttling.
+ *
+ * docs/SECURITY-FINDINGS.md listed "no rate limiting on login" as accepted, and
+ * it was the one accepted item worth closing: bcrypt makes each guess expensive
+ * for the *server*, not for the attacker, and the login form was otherwise
+ * happy to be asked forever.
+ *
+ * Counted two ways on purpose. Per email, so a single account cannot be ground
+ * down from a botnet; per IP, so one host cannot sidestep that by spreading
+ * guesses across many addresses. Either limit tripping is enough to refuse.
+ *
+ * Only failures are recorded, and a success clears that address's history, so
+ * an ordinary user who mistypes twice and then gets in leaves nothing behind.
+ * The window is a rolling one — there is no lockout to wait out and no state to
+ * unstick, which matters for a public demo where the credentials are printed on
+ * the page.
+ */
+const LOGIN_WINDOW_MINUTES = 15;
+const LOGIN_MAX_PER_EMAIL  = 10;
+// Deliberately much looser than the per-email limit. An IP is not a person:
+// offices, universities and mobile carriers put thousands of people behind one
+// address, so a tight per-IP cap mostly punishes the legitimate user who
+// happens to share a NAT with someone guessing. The per-email limit is what
+// actually protects an account; this one exists to make spraying across many
+// accounts expensive, and 60 wrong passwords in 15 minutes from one address is
+// still nothing a real person does.
+const LOGIN_MAX_PER_IP     = 60;
+
+/** Packed client address, or null when it cannot be parsed. */
+function client_ip_packed(): ?string
+{
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    // Behind Render's proxy the peer is the load balancer, so the real client
+    // is in X-Forwarded-For — honoured only when TRUST_PROXY says the hop is
+    // trustworthy, the same rule request_is_https() applies to the scheme.
+    if ((getenv('TRUST_PROXY') ?: '') !== '' && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $first = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
+        if ($first !== '') {
+            $ip = $first;
+        }
+    }
+    $packed = @inet_pton($ip);
+    return $packed === false ? null : $packed;
+}
+
+/**
+ * May this login attempt proceed?
+ *
+ * Fails *open* on a database error. A throttle that cannot read its own table
+ * must not become an outage of the login page — the password check is still
+ * the thing actually protecting the account.
+ */
+function login_throttle_check(string $email): bool
+{
+    try {
+        $pdo = db();
+        $since = 'DATE_SUB(NOW(), INTERVAL ' . LOGIN_WINDOW_MINUTES . ' MINUTE)';
+
+        $stmt = $pdo->prepare(
+            "SELECT COUNT(*) FROM login_attempts
+              WHERE email = ? AND attempted_at > {$since}"
+        );
+        $stmt->execute([$email]);
+        if ((int) $stmt->fetchColumn() >= LOGIN_MAX_PER_EMAIL) {
+            return false;
+        }
+
+        $ip = client_ip_packed();
+        if ($ip !== null) {
+            $stmt = $pdo->prepare(
+                "SELECT COUNT(*) FROM login_attempts
+                  WHERE ip = ? AND attempted_at > {$since}"
+            );
+            $stmt->execute([$ip]);
+            if ((int) $stmt->fetchColumn() >= LOGIN_MAX_PER_IP) {
+                return false;
+            }
+        }
+        return true;
+    } catch (Throwable $e) {
+        return true;
+    }
+}
+
+function login_attempt_failed(string $email): void
+{
+    try {
+        $pdo = db();
+        $stmt = $pdo->prepare('INSERT INTO login_attempts (ip, email) VALUES (?, ?)');
+        $stmt->execute([client_ip_packed(), $email]);
+
+        // Opportunistic prune. Nothing else ever deletes from this table, and
+        // rows outside the window can never affect a decision again.
+        if (random_int(1, 20) === 1) {
+            $pdo->exec(
+                'DELETE FROM login_attempts
+                  WHERE attempted_at < DATE_SUB(NOW(), INTERVAL '
+                . LOGIN_WINDOW_MINUTES . ' MINUTE)'
+            );
+        }
+    } catch (Throwable $e) {
+        // Recording is best-effort; never break the login page over it.
+    }
+}
+
+/**
+ * Clear the history a successful login has just disproved.
+ *
+ * The address is cleared as well as the email, and that is the part that keeps
+ * the per-IP limit humane: someone behind a shared NAT who proves they hold a
+ * real account redeems that address for everyone on it, instead of being
+ * counted toward a cap they did not fill.
+ */
+function login_attempt_succeeded(string $email): void
+{
+    try {
+        $pdo = db();
+        $stmt = $pdo->prepare('DELETE FROM login_attempts WHERE email = ?');
+        $stmt->execute([$email]);
+
+        $ip = client_ip_packed();
+        if ($ip !== null) {
+            $stmt = $pdo->prepare('DELETE FROM login_attempts WHERE ip = ?');
+            $stmt->execute([$ip]);
+        }
+    } catch (Throwable $e) {
+    }
 }
 
 function log_in_user(array $user): void

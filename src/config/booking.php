@@ -88,19 +88,36 @@ function seats_remaining_all(PDO $pdo, int $matchId): array
  * Matches with no bookings at all have no row in the aggregate, so the
  * capacities are read first and the counts subtracted from them, rather than
  * building the result from the bookings side and losing the empty fixtures.
+ *
+ * $mids scopes both queries to the fixtures actually being rendered. Without
+ * it the grouped count read every row the bookings table has ever held, on
+ * every fixtures-page load — correct, and fine at demo scale, but the cost
+ * grew with total bookings ever made rather than with the handful of matches
+ * on screen. Passing the ids costs nothing at the call site, which already
+ * has them.
  */
-function seats_remaining_many(PDO $pdo): array
+function seats_remaining_many(PDO $pdo, array $mids = []): array
 {
+    $mids = array_values(array_unique(array_map('intval', $mids)));
+    // An explicit empty selection means "no fixtures", not "all of them".
+    if ($mids === [] && func_num_args() > 1) {
+        return [];
+    }
+
     $capacityColumns = [];
     foreach (SEAT_TIERS as $tier) {
         $capacityColumns[] = 's.' . tier_capacity_column($tier) . ' AS cap_' . $tier;
     }
 
+    // Integers cast above, so this interpolation carries no user string — the
+    // same reasoning as the tier column names, which are allowlist-gated.
+    $midFilter = $mids === [] ? '' : ' WHERE m.mid IN (' . implode(',', $mids) . ')';
+
     $remaining = [];
     $capacities = $pdo->query(
         'SELECT m.mid, ' . implode(', ', $capacityColumns) . '
            FROM matches m
-           JOIN stadium s ON s.sid = m.venue'
+           JOIN stadium s ON s.sid = m.venue' . $midFilter
     );
 
     foreach ($capacities as $row) {
@@ -111,7 +128,7 @@ function seats_remaining_many(PDO $pdo): array
 
     $booked = $pdo->query(
         'SELECT mid, seat_tier, COUNT(*) AS taken
-           FROM bookings
+           FROM bookings' . ($mids === [] ? '' : ' WHERE mid IN (' . implode(',', $mids) . ')') . '
           GROUP BY mid, seat_tier'
     );
 
