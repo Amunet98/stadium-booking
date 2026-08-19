@@ -64,7 +64,7 @@ demo data apply themselves on first boot.
 Verify the claims below rather than taking them on trust:
 
 ```bash
-./tests/verify.sh        # 18 assertions over HTTP: auth, CSRF, capacity, constraints
+./tests/verify.sh        # 22 assertions over HTTP: auth, CSRF, capacity, constraints, throttling, redirects
 ./tests/concurrency.sh   # 24 workers race for 4 seats
 ```
 
