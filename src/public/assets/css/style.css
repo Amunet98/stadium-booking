@@ -154,6 +154,14 @@
 }
 
 /* ------------------------------------------------------ 4 base + typography */
+html {
+    /* Mobile browsers paint their own translucent gray/black overlay on tap
+       unless told otherwise, which muddies every button's press state
+       regardless of its actual accent color. Real feedback comes from
+       Bootstrap's own hover/active states. */
+    -webkit-tap-highlight-color: transparent;
+}
+
 body {
     background-color: var(--app-page-bg);
     color: var(--app-ink);
