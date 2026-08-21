@@ -299,7 +299,9 @@ p, li { line-height: 1.6; }
     text-decoration: none;
 }
 
-.app-brand:hover { color: var(--app-ink); }
+@media (hover: hover) and (pointer: fine) {
+    .app-brand:hover { color: var(--app-ink); }
+}
 .app-brand-mark  { color: var(--app-brand); flex: 0 0 auto; }
 .app-brand-sub {
     display: block;
@@ -321,8 +323,14 @@ p, li { line-height: 1.6; }
     transition: color var(--dur-micro) var(--ease-out);
 }
 
-.app-nav .nav-link:hover,
 .app-nav .nav-link:focus-visible { color: var(--app-ink); }
+
+/* Touch has no real hover: without this guard, tapping leaves the link
+   stuck in its :hover state until something else is tapped, because touch
+   browsers apply :hover on tap and never fire a mouseleave to clear it. */
+@media (hover: hover) and (pointer: fine) {
+    .app-nav .nav-link:hover { color: var(--app-ink); }
+}
 
 .app-nav .nav-link[aria-current="page"] { color: var(--app-ink); font-weight: 600; }
 
@@ -361,10 +369,16 @@ p, li { line-height: 1.6; }
                 color var(--dur-micro) var(--ease-out);
 }
 
-.app-icon-btn:hover,
 .app-icon-btn:focus-visible {
     background: var(--app-surface-2);
     color: var(--app-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .app-icon-btn:hover {
+        background: var(--app-surface-2);
+        color: var(--app-ink);
+    }
 }
 
 .theme-toggle .icon-moon { display: none; }
@@ -404,11 +418,18 @@ p, li { line-height: 1.6; }
                 background var(--dur-micro) var(--ease-out);
 }
 
-.app-user-btn:hover,
 .app-user-btn:focus-visible {
     background: var(--app-surface-2);
     border-color: var(--app-border);
     color: var(--app-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .app-user-btn:hover {
+        background: var(--app-surface-2);
+        border-color: var(--app-border);
+        color: var(--app-ink);
+    }
 }
 
 .dropdown-menu {
@@ -432,7 +453,9 @@ p, li { line-height: 1.6; }
 
 /* Destructive/exit actions sit below a rule, never inline with navigation. */
 .dropdown-item-danger { color: var(--app-danger) !important; }
-.dropdown-item-danger:hover { background: var(--app-danger-soft) !important; }
+@media (hover: hover) and (pointer: fine) {
+    .dropdown-item-danger:hover { background: var(--app-danger-soft) !important; }
+}
 
 .offcanvas {
     --bs-offcanvas-bg: var(--app-surface);
@@ -544,7 +567,9 @@ p, li { line-height: 1.6; }
     color: var(--app-ink-muted);
 }
 
-.app-password button:hover { color: var(--app-ink); background: var(--app-surface-2); }
+@media (hover: hover) and (pointer: fine) {
+    .app-password button:hover { color: var(--app-ink); background: var(--app-surface-2); }
+}
 .app-password .icon-hide { display: none; }
 .app-password.is-shown .icon-hide { display: block; }
 .app-password.is-shown .icon-show { display: none; }
@@ -622,10 +647,12 @@ p, li { line-height: 1.6; }
                 border-color var(--dur) var(--ease-out);
 }
 
-.fixture-card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-3);
-    border-color: var(--app-border);
+@media (hover: hover) and (pointer: fine) {
+    .fixture-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-3);
+        border-color: var(--app-border);
+    }
 }
 
 .fixture-card:has(a:active) { transform: scale(.995); }
@@ -661,8 +688,10 @@ p, li { line-height: 1.6; }
     transition: transform var(--dur) var(--ease-out);
 }
 
-.fixture-card:hover .fixture-art-crests img:first-child { transform: translateX(-3px); }
-.fixture-card:hover .fixture-art-crests img:last-child  { transform: translateX(3px); }
+@media (hover: hover) and (pointer: fine) {
+    .fixture-card:hover .fixture-art-crests img:first-child { transform: translateX(-3px); }
+    .fixture-card:hover .fixture-art-crests img:last-child  { transform: translateX(3px); }
+}
 
 .fixture-art-v {
     font-family: var(--font-display);
@@ -705,7 +734,9 @@ p, li { line-height: 1.6; }
 }
 
 .fixture-title a { color: var(--app-ink); text-decoration: none; }
-.fixture-title a:hover { color: var(--app-brand); }
+@media (hover: hover) and (pointer: fine) {
+    .fixture-title a:hover { color: var(--app-brand); }
+}
 
 /* The whole card is clickable via a stretched link, but the link text stays
    the fixture name so a screen reader announces something meaningful. */
@@ -943,7 +974,9 @@ p, li { line-height: 1.6; }
                 box-shadow var(--dur) var(--ease-out);
 }
 
-.venue-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-3); color: inherit; }
+@media (hover: hover) and (pointer: fine) {
+    .venue-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-3); color: inherit; }
+}
 .venue-card img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
 .venue-card-body { padding: .875rem 1rem 1rem; }
 .venue-card h3 { font-size: .9375rem; margin-bottom: .1875rem; }
@@ -1000,7 +1033,9 @@ p, li { line-height: 1.6; }
     border-color: var(--app-brand);
 }
 
-.tier-option:hover:not(:has(input:disabled)) { border-color: var(--app-border); }
+@media (hover: hover) and (pointer: fine) {
+    .tier-option:hover:not(:has(input:disabled)) { border-color: var(--app-border); }
+}
 
 .tier-option:has(input:checked) {
     border-color: var(--app-brand);
@@ -1054,7 +1089,9 @@ p, li { line-height: 1.6; }
 }
 
 .breadcrumb a { color: var(--app-ink-muted); text-decoration: none; }
-.breadcrumb a:hover { color: var(--app-brand); }
+@media (hover: hover) and (pointer: fine) {
+    .breadcrumb a:hover { color: var(--app-brand); }
+}
 
 /* --- ticket stubs --- */
 .ticket {
@@ -1169,7 +1206,9 @@ p, li { line-height: 1.6; }
 .app-footer ul { list-style: none; margin: 0; padding: 0; }
 .app-footer li { margin-bottom: .5rem; }
 .app-footer a { color: var(--app-ink-muted); text-decoration: none; }
-.app-footer a:hover { color: var(--app-brand); text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) {
+    .app-footer a:hover { color: var(--app-brand); text-decoration: underline; }
+}
 
 .app-footer-base {
     margin-top: 2rem;
